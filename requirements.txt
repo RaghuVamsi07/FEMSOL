@@ -10,4 +10,3 @@ Pillow
 PyQt5
 bokeh
 dash
-sqlite3
