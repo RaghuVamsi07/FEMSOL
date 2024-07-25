@@ -1,0 +1,13 @@
+Flask
+matplotlib
+numpy
+pandas
+scipy
+plotly
+seaborn
+colorama
+Pillow
+PyQt5
+bokeh
+dash
+sqlite3

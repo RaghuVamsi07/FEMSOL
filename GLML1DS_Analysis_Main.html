@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Geometric Material 1D Stationary Analysis</title>
+    <link rel="stylesheet" href="css/geometric_styles.css">
+    <style>
+        #cad-viewer {
+            width: 100%;
+            height: calc(100vh - 160px); /* Adjusted height to maintain space from bottom */
+            border: 1px solid #ccc;
+            background-color: #fff;  /* Set background color to white */
+        }
+        .button-container {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px; /* Add gap between buttons */
+        }
+        .button-container button, .element-button-container button {
+            flex: 1; /* Make buttons take equal space */
+            padding: 10px;
+            background-color: #00BFFF;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            font-family: 'Raleway', sans-serif;
+        }
+        .button-container button:hover, .element-button-container button:hover {
+            background-color: #008CBA;
+        }
+        .element-button-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+            justify-content: center;
+        }
+        .element-button-container button {
+            width: calc(50% - 10px);
+        }
+        .element-button-container button:nth-child(even) {
+            background-color: #FFD700; /* Yellow color for even buttons */
+        }
+        .element-button-container button:nth-child(odd) {
+            background-color: #32CD32; /* Light green color for odd buttons */
+        }
+        .user-sketcher {
+            text-align: center;
+            font-size: 1.5em;
+            font-weight: 600;
+            color: #00BFFF;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+            margin-top: 20px;
+            font-family: 'Raleway', sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-top">
+            <h1>FEMSOL</h1>
+            <p>Finite Element and Mathematical SOLutions</p>
+        </div>
+    </header>
+    
+    <div class="main-content">
+        <div class="cad-viewer-container">
+            <form id="upload-form" enctype="multipart/form-data">
+                <div class="upload-section">
+                    <label for="file-input">Choose File</label>
+                    <input type="file" id="file-input" name="file">
+                </div>
+                <div class="select-section">
+                    <label for="axis-select">Select Axis for Analysis:</label>
+                    <select id="axis-select" name="axis">
+                        <option value="x">X-Axis</option>
+                        <option value="y">Y-Axis</option>
+                        <option value="z">Z-Axis</option>
+                    </select>
+                </div>
+                <div class="select-section">
+                    <label for="scale-select">Select Scale:</label>
+                    <select id="scale-select" name="scale">
+                        <option value="mm">mm</option>
+                        <option value="cm">cm</option>
+                        <option value="m">m</option>
+                    </select>
+                </div>
+                <div class="button-container">
+                    <button type="button" id="upload-analyze-button">View</button>
+                    <button type="button" id="analyze-button">Analyze</button>
+                </div>
+                <div class="user-sketcher">User Sketcher Analysis</div>
+                <div class="element-button-container">
+                    <button type="button" onclick="window.location.href='1D/1D_Bars/1D_Bars.html'">Bars</button>
+                    <button type="button" onclick="window.location.href='beam_analysis.html'">Beams</button>
+                    <button type="button" onclick="window.location.href='truss_analysis.html'">Trusses</button>
+                    <button type="button" onclick="window.location.href='frame_analysis.html'">Frames</button>
+                    <button type="button" onclick="window.location.href='column_analysis.html'">Columns</button>
+                    <button type="button" onclick="window.location.href='cable_analysis.html'">Cables</button>
+                    <button type="button" onclick="window.location.href='rod_analysis.html'">Rods</button>
+                    <button type="button" onclick="window.location.href='strut_analysis.html'">Struts</button>
+                    <button type="button" onclick="window.location.href='shaft_analysis.html'">Shafts</button>
+                    <button type="button" onclick="window.location.href='spring_analysis.html'">Springs</button>
+                    <button type="button" onclick="window.location.href='torsion_analysis.html'">Torsion of Circular Shafts</button>
+                </div>
+            </form>
+        </div>
+        <div class="cad-display-container">
+            <div id="cad-viewer"></div>
+        </div>
+    </div>
+    <footer>
+        <div class="footer-quote">
+            <p>DREAMS NEVER DIE</p>
+        </div>
+    </footer>
+    <script src="js/script.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/STLLoader.js"></script>
+    <script src="js/geometric_script.js"></script>
+    <script>
+        document.getElementById('analyze-button').addEventListener('click', function () {
+            window.location.href = 'GLML1DS_Analysis.html'; // Redirect to the analysis page
+        });
+    </script>
+</body>
+</html>
