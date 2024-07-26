@@ -26,7 +26,7 @@ lineSelect.addEventListener('change', () => {
 });
 
 [x1Input, y1Input, x2Input, y2Input].forEach(input => {
-    input.addEventListener('input', () => {
+    input.addEventListener('input', async () => {
         const selectedIndex = lineSelect.value;
         if (selectedIndex === "") return;
 
@@ -34,7 +34,7 @@ lineSelect.addEventListener('change', () => {
         lines[selectedIndex].y1 = parseInt(y1Input.value);
         lines[selectedIndex].x2 = parseInt(x2Input.value);
         lines[selectedIndex].y2 = parseInt(y2Input.value);
-        localStorage.setItem('lines', JSON.stringify(lines));
+        await saveLines();
         draw();
         highlightLine(lines[selectedIndex]);
     });
@@ -80,12 +80,12 @@ lineSelectMaterial.addEventListener('change', (e) => {
     highlightLine(selectedLine);
 });
 
-removeLineBtn.addEventListener('click', () => {
+removeLineBtn.addEventListener('click', async () => {
     const selectedIndex = lineSelect.value;
     if (selectedIndex === "") return;
 
     lines.splice(selectedIndex, 1);
-    localStorage.setItem('lines', JSON.stringify(lines));
+    await saveLines();
     updateLineSelect();
     updateForceLineSelect();
     updateDistributiveLineSelect();
@@ -175,7 +175,8 @@ function updateMaterialLineSelect() {
     });
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    await fetchLines();
     updateLineSelect();
     updateForceLineSelect();
     updateDistributiveLineSelect();
