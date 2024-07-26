@@ -4,10 +4,25 @@ let drawing = false;
 let translating = false;
 let translateStartX, translateStartY;
 let x1, y1, x2, y2;
-let lines = JSON.parse(localStorage.getItem('lines')) || [];
+let lines = [];
 let scale = 1;
 let originX = canvas.width / 2;
 let originY = canvas.height / 2;
+
+async function fetchLines() {
+    const response = await fetch('http://<your_public_ip>:5000/api/lines');
+    lines = await response.json();
+}
+
+async function saveLines() {
+    await fetch('http://<your_public_ip>:5000/api/lines', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(lines)
+    });
+}
 
 function resizeCanvas() {
     canvas.width = canvas.parentElement.clientWidth;
@@ -90,11 +105,11 @@ canvas.addEventListener('mousemove', (e) => {
     }
 });
 
-canvas.addEventListener('mouseup', () => {
+canvas.addEventListener('mouseup', async () => {
     if (drawing) {
         drawing = false;
         lines.push({ x1, y1, x2, y2 });
-        localStorage.setItem('lines', JSON.stringify(lines));
+        await saveLines();
         updateLineSelect();
         updateForceLineSelect();
         updateDistributiveLineSelect();
@@ -118,9 +133,9 @@ function translateGrid(e) {
     draw();
 }
 
-document.getElementById('clearStorage').addEventListener('click', () => {
-    localStorage.clear();
+document.getElementById('clearStorage').addEventListener('click', async () => {
     lines = [];
+    await saveLines();
     draw();
     updateLineSelect();
     updateForceLineSelect();
@@ -215,15 +230,16 @@ function highlightLine(line) {
     ctx.stroke();
 }
 
-function loadLines() {
-    lines = JSON.parse(localStorage.getItem('lines')) || [];
+async function loadLines() {
+    await fetchLines();
 }
 
-loadLines();
-updateLineSelect();
-updateForceLineSelect();
-updateDistributiveLineSelect();
-updateBodyLineSelect();
-updateThermalLineSelect();
-updateMaterialLineSelect();
-draw();
+loadLines().then(() => {
+    updateLineSelect();
+    updateForceLineSelect();
+    updateDistributiveLineSelect();
+    updateBodyLineSelect();
+    updateThermalLineSelect();
+    updateMaterialLineSelect();
+    draw();
+});
