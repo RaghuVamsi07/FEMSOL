@@ -1,0 +1,93 @@
+body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 0;
+    height: 100vh;
+    overflow: hidden; /* Prevent body from scrolling */
+}
+
+header, footer {
+    width: 100%;
+    text-align: center;
+    padding: 1rem;
+    background: #f8f8f8;
+}
+
+/* Adjust the height of the header manually */
+header {
+    height: 40px; /* Default height, change as needed */
+}
+
+footer {
+    background: #333;
+    color: #fff;
+    padding: 0.5rem; /* Reduced padding */
+    margin-top: 10px; /* Added margin to create gap */
+    height: 10px; /* Default height, change as needed */
+}
+
+main {
+    display: flex;
+    width: 100%;
+    flex: 1;
+    overflow: hidden; /* Prevent main from scrolling */
+}
+
+#leftContent {
+    width: 20%; /* Adjust the width of the left content here */
+    background: #eee;
+    padding: 1rem; /* Adjust padding manually */
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    height: calc(100vh - 70px - 20px); /* Adjust for header and footer height manually */
+    overflow-y: auto; /* Enable vertical scrolling */
+}
+
+#rightMainContentContainer {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #fff;
+    padding: 1rem; /* Adjust padding manually */
+    box-sizing: border-box;
+    height: calc(100vh - 75px - 20px); /* Adjust for header and footer height manually */
+    overflow: hidden; /* Prevent right content from scrolling */
+}
+
+#workspace {
+    width: 15%; /* Adjust the width of the workspace here */
+    background: #f8f8f8;
+    padding: 1rem; /* Adjust padding manually */
+    box-sizing: border-box;
+    height: calc(100vh - 70px - 20px); /* Adjust for header and footer height manually */
+    overflow-y: auto; /* Enable vertical scrolling */
+}
+
+canvas {
+    border: 1px solid black;
+    display: block; /* Ensure canvas takes the full container size */
+    width: 100%;
+    height: 100%;
+}
+
+button, select, label {
+    margin: 0.5rem 0;
+}
+
+#forcesSection {
+    margin-top: 1rem;
+}
+
+#forcesSection h3 {
+    margin-bottom: 0.5rem;
+}
+
+#forcesSection label, #forcesSection input {
+    display: block;
+    margin-bottom: 0.5rem;
+}

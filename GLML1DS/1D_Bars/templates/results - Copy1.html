@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plot Results</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Results Page</h1>
+    </header>
+    <main>
+        <button id="plotData">Plot Data</button>
+        <div id="plotContainer"></div>
+    </main>
+    <footer>
+        <p>DREAMS NEVER DIE</p>
+    </footer>
+    <script>
+        document.getElementById('plotData').onclick = function() {
+            fetch('http://127.0.0.1:5001/plot-data', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        const img = new Image();
+                        img.src = 'data:image/png;base64,' + data.plot_url;
+                        const plotContainer = document.getElementById('plotContainer');
+                        plotContainer.innerHTML = '';
+                        plotContainer.appendChild(img);
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Line Drawing and Highlighting</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/9.4.4/math.min.js"></script>
+</head>
+<body>
+    <header>
+        <h1>Header Section</h1>
+    </header>
+    <main>
+        <div id="leftContent">
+            <button id="clearStorage">Clear Storage</button>
+            <select id="lineSelect">
+                <option value="">Select a line to highlight</option>
+            </select>
+            <button id="removeLine">Remove Selected Line</button>
+            <button id="zoomIn">Zoom In</button>
+            <button id="zoomOut">Zoom Out</button>
+            <button id="translateGrid">Translate Grid</button>
+            <div>
+                <label>X1: <input type="number" id="x1" /></label>
+                <label>Y1: <input type="number" id="y1" /></label>
+                <label>X2: <input type="number" id="x2" /></label>
+                <label>Y2: <input type="number" id="y2" /></label>
+            </div>
+            <!-- Forces Section -->
+            <div id="forcesSection">
+                <h3>Forces</h3>
+                <label for="lineSelectForce">Select Line:</label>
+                <select id="lineSelectForce">
+                    <option value="">Select a line</option>
+                </select>
+                <label for="fx">F<sub>x</sub>:</label>
+                <input type="number" id="fx" name="fx">
+                <label for="fy">F<sub>y</sub>:</label>
+                <input type="number" id="fy" name="fy">
+                <label for="forceX">X:</label>
+                <input type="number" id="forceX" name="forceX">
+                <label for="forceY">Y:</label>
+                <input type="number" id="forceY" name="forceY">
+                <button id="addForce">Add Force</button>
+            </div>
+            <!-- Distributive Forces Section -->
+            <div id="distributiveForcesSection">
+                <h3>Distributive Forces</h3>
+                <label for="lineSelectDistributive">Select Line:</label>
+                <select id="lineSelectDistributive">
+                    <option value="">Select a line</option>
+                </select>
+                <label for="distributiveForce">Force:</label>
+                <input type="text" id="distributiveForce" name="distributiveForce" placeholder="Enter force (e.g., 100 or 10*x)">
+                <label>X1: <input type="number" id="x1Distributive" /></label>
+                <label>Y1: <input type="number" id="y1Distributive" /></label>
+                <label>X2: <input type="number" id="x2Distributive" /></label>
+                <label>Y2: <input type="number" id="y2Distributive" /></label>
+                <button id="addDistributiveForce">Add Distributive Force</button>
+            </div>
+            <!-- Body Forces Section -->
+            <div id="bodyForcesSection">
+                <h3>Body Forces</h3>
+                <label for="lineSelectBody">Select Line:</label>
+                <select id="lineSelectBody">
+                    <option value="">Select a line</option>
+                </select>
+                <label for="bodyForce">Force:</label>
+                <input type="text" id="bodyForce" name="bodyForce" placeholder="Enter force (e.g., 100 or 10*x)">
+                <label>X1: <input type="number" id="x1Body" /></label>
+                <label>Y1: <input type="number" id="y1Body" /></label>
+                <label>X2: <input type="number" id="x2Body" /></label>
+                <label>Y2: <input type="number" id="y2Body" /></label>
+                <button id="addBodyForce">Add Body Force</button>
+           </div>
+            <!-- Thermal Loads Section -->
+            <div id="thermalForcesSection">
+                <h3>Thermal Loads</h3>
+                <label for="lineSelectThermal">Select Line:</label>
+                <select id="lineSelectThermal">
+                    <option value="">Select a line</option>
+                </select>
+                <label>Linear Thermal Expansion (α): <input type="text" id="alpha" /></label>
+                <label>Temperature Difference (ΔT): <input type="text" id="deltaT" /></label>
+                <label>X1: <input type="number" id="x1Thermal" /></label>
+                <label>Y1: <input type="number" id="y1Thermal" /></label>
+                <label>X2: <input type="number" id="x2Thermal" /></label>
+                <label>Y2: <input type="number" id="y2Thermal" /></label>
+                <button id="addThermalForce">Add Thermal Force</button>
+            </div>
+            <!-- Material and Analysis Section -->
+            <div id="materialAnalysisSection">
+                <h3>Material and Area Properties</h3>
+                <label for="lineSelectMaterial">Select Line:</label>
+                <select id="lineSelectMaterial">
+                    <option value="">Select a line</option>
+                </select>
+                <label>Young's Modulus (E): <input type="number" id="youngsModulus" /></label>
+                <label>Area (A): <input type="text" id="area" placeholder="Enter area (e.g., 100 or 10*x)" /></label>
+                <label>X1: <input type="number" id="x1Material" /></label>
+                <label>Y1: <input type="number" id="y1Material" /></label>
+                <label>X2: <input type="number" id="x2Material" /></label>
+                <label>Y2: <input type="number" id="y2Material" /></label>
+                <button id="setMaterialAnalysis">Set Material and Area</button>
+            </div>
+        </div>
+        <div id="rightMainContentContainer">
+            <canvas id="canvas"></canvas>
+        </div>
+        <div id="workspace">
+            <h3>Workspace</h3>
+            <div id="workspaceContent"></div>
+        </div>
+    </main>
+    <footer>
+        <p>DREAMS NEVER DIE</p>
+    </footer>
+    <script src="data.js"></script>
+    <script src="draw.js"></script>
+    <script src="pointer.js"></script>
+    <script src="force.js"></script>
+    <script src="distributive_force.js"></script>
+    <script src="body_force.js"></script>
+    <script src="thermal_force.js"></script>
+    <script src="material_analysis.js"></script>
+    <script src="workspace.js"></script>
+</body>
+</html>
