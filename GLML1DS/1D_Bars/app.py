@@ -7,7 +7,7 @@ app = Flask(__name__)
 db_config = {
     'user': 'femsol_user',
     'password': 'Dreamsneverdie@21',
-    'host': 'localhost',
+    'host': 'database-1.c1c8ug44ytox.eu-north-1.rds.amazonaws.com',  # Replace with your RDS endpoint
     'database': 'femsol_db'
 }
 
@@ -22,7 +22,6 @@ def index():
 @app.route('/results')
 def results():
     return render_template('results.html')
-
 
 @app.route('/add-line', methods=['POST'])
 def add_line():
