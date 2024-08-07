@@ -1,6 +1,20 @@
-if (typeof sessionID === 'undefined') {
-    var sessionID = 'default_session'; // Ensure sessionID is defined once
+function getSessionID() {
+    const name = 'session_id=';
+    const decodedCookie = decodeURIComponent(document.cookie);
+    const ca = decodedCookie.split(';');
+    for (let i = 0; i < ca.length; i++) {
+        let c = ca[i];
+        while (c.charAt(0) == ' ') {
+            c = c.substring(1);
+        }
+        if (c.indexOf(name) == 0) {
+            return c.substring(name.length, c.length);
+        }
+    }
+    return "";
 }
+
+const sessionID = getSessionID();
 
 const lineSelect = document.getElementById('lineSelect');
 const lineSelectForce = document.getElementById('lineSelectForce');
@@ -21,7 +35,7 @@ lineSelect.addEventListener('change', () => {
     const selectedIndex = lineSelect.value;
     if (selectedIndex === "") return;
 
-    const selectedLine = lines[sessionID][selectedIndex];
+    const selectedLine = lines[selectedIndex];
     highlightLine(selectedLine);
     x1Input.value = selectedLine.x1;
     y1Input.value = selectedLine.y1;
@@ -35,7 +49,7 @@ lineSelect.addEventListener('change', () => {
         if (selectedIndex === "") return;
 
         const updatedLine = {
-            ...lines[sessionID][selectedIndex],
+            ...lines[selectedIndex],
             x1: parseInt(x1Input.value),
             y1: parseInt(y1Input.value),
             x2: parseInt(x2Input.value),
@@ -43,7 +57,7 @@ lineSelect.addEventListener('change', () => {
         };
 
         try {
-            const response = await fetch(`/update-line/${lines[sessionID][selectedIndex].id}`, {
+            const response = await fetch(`/update-line/${lines[selectedIndex].id}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json'
@@ -52,9 +66,9 @@ lineSelect.addEventListener('change', () => {
             });
             const result = await response.json();
             if (result.status === 'success') {
-                lines[sessionID][selectedIndex] = updatedLine;
+                lines[selectedIndex] = updatedLine;
                 draw();
-                highlightLine(lines[sessionID][selectedIndex]);
+                highlightLine(lines[selectedIndex]);
             } else {
                 console.error('Failed to update line');
             }
@@ -70,7 +84,7 @@ lineSelects.forEach(select => {
         const selectedIndex = e.target.value;
         if (selectedIndex === "") return;
 
-        const selectedLine = lines[sessionID][selectedIndex];
+        const selectedLine = lines[selectedIndex];
         highlightLine(selectedLine);
     });
 });
@@ -80,12 +94,12 @@ removeLineBtn.addEventListener('click', async () => {
     if (selectedIndex === "") return;
 
     try {
-        const response = await fetch(`/delete-line/${lines[sessionID][selectedIndex].id}`, {
+        const response = await fetch(`/delete-line/${lines[selectedIndex].id}`, {
             method: 'DELETE'
         });
         const result = await response.json();
         if (result.status === 'success') {
-            lines[sessionID].splice(selectedIndex, 1);
+            lines.splice(selectedIndex, 1);
             updateLineSelect();
             updateForceLineSelect();
             updateDistributiveLineSelect();
@@ -122,9 +136,8 @@ zoomOutBtn.addEventListener('click', () => {
 });
 
 function updateLineSelect() {
-    const lineSelect = document.getElementById('lineSelect');
-    lineSelect.innerHTML = '<option value="">Select a line to highlight</option>';
-    (lines[sessionID] || []).forEach((line, index) => {
+    lineSelect.innerHTML = "";
+    lines.forEach((line, index) => {
         const option = document.createElement('option');
         option.value = index;
         option.textContent = `Line ${index + 1}`;
@@ -133,9 +146,8 @@ function updateLineSelect() {
 }
 
 function updateForceLineSelect() {
-    const lineSelectForce = document.getElementById('lineSelectForce');
-    lineSelectForce.innerHTML = '<option value="">Select a line</option>';
-    (lines[sessionID] || []).forEach((line, index) => {
+    lineSelectForce.innerHTML = "";
+    lines.forEach((line, index) => {
         const option = document.createElement('option');
         option.value = index;
         option.textContent = `Line ${index + 1}`;
@@ -144,9 +156,8 @@ function updateForceLineSelect() {
 }
 
 function updateDistributiveLineSelect() {
-    const lineSelectDistributive = document.getElementById('lineSelectDistributive');
-    lineSelectDistributive.innerHTML = '<option value="">Select a line</option>';
-    (lines[sessionID] || []).forEach((line, index) => {
+    lineSelectDistributive.innerHTML = "";
+    lines.forEach((line, index) => {
         const option = document.createElement('option');
         option.value = index;
         option.textContent = `Line ${index + 1}`;
@@ -155,9 +166,8 @@ function updateDistributiveLineSelect() {
 }
 
 function updateBodyLineSelect() {
-    const lineSelectBody = document.getElementById('lineSelectBody');
-    lineSelectBody.innerHTML = '<option value="">Select a line</option>';
-    (lines[sessionID] || []).forEach((line, index) => {
+    lineSelectBody.innerHTML = "";
+    lines.forEach((line, index) => {
         const option = document.createElement('option');
         option.value = index;
         option.textContent = `Line ${index + 1}`;
@@ -166,9 +176,8 @@ function updateBodyLineSelect() {
 }
 
 function updateThermalLineSelect() {
-    const lineSelectThermal = document.getElementById('lineSelectThermal');
-    lineSelectThermal.innerHTML = '<option value="">Select a line</option>';
-    (lines[sessionID] || []).forEach((line, index) => {
+    lineSelectThermal.innerHTML = "";
+    lines.forEach((line, index) => {
         const option = document.createElement('option');
         option.value = index;
         option.textContent = `Line ${index + 1}`;
@@ -177,9 +186,8 @@ function updateThermalLineSelect() {
 }
 
 function updateMaterialLineSelect() {
-    const lineSelectMaterial = document.getElementById('lineSelectMaterial');
-    lineSelectMaterial.innerHTML = '<option value="">Select a line</option>';
-    (lines[sessionID] || []).forEach((line, index) => {
+    lineSelectMaterial.innerHTML = "";
+    lines.forEach((line, index) => {
         const option = document.createElement('option');
         option.value = index;
         option.textContent = `Line ${index + 1}`;
