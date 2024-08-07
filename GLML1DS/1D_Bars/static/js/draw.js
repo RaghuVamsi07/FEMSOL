@@ -4,13 +4,28 @@ let drawing = false;
 let translating = false;
 let translateStartX, translateStartY;
 let x1, y1, x2, y2;
-let lines = {};
+let lines = [];
 let scale = 1;
 let originX = canvas.width / 2;
 let originY = canvas.height / 2;
-if (typeof sessionID === 'undefined') {
-    var sessionID = 'default_session'; // Ensure sessionID is defined once
+
+function getSessionID() {
+    const name = 'session_id=';
+    const decodedCookie = decodeURIComponent(document.cookie);
+    const ca = decodedCookie.split(';');
+    for (let i = 0; i < ca.length; i++) {
+        let c = ca[i];
+        while (c.charAt(0) == ' ') {
+            c = c.substring(1);
+        }
+        if (c.indexOf(name) == 0) {
+            return c.substring(name.length, c.length);
+        }
+    }
+    return "";
 }
+
+const sessionID = getSessionID();
 
 function resizeCanvas() {
     canvas.width = canvas.parentElement.clientWidth;
@@ -54,7 +69,7 @@ function drawLines() {
     ctx.strokeStyle = 'black';
     ctx.lineWidth = 2;
 
-    (lines[sessionID] || []).forEach(line => {
+    lines.forEach(line => {
         ctx.beginPath();
         ctx.moveTo(originX + line.x1 * scale, originY - line.y1 * scale);
         ctx.lineTo(originX + line.x2 * scale, originY - line.y2 * scale);
@@ -97,29 +112,22 @@ canvas.addEventListener('mouseup', async () => {
     if (drawing) {
         drawing = false;
         const newLine = { x1, y1, x2, y2, session_id: sessionID };
-        if (!lines[sessionID]) {
-            lines[sessionID] = [];
-        }
-        lines[sessionID].push(newLine);
+        lines.push(newLine);
 
         // Send line data to the server
-        try {
-            const response = await fetch('/add-line', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(newLine)
-            });
-            const data = await response.json();
-            newLine.id = data.id;
-            updateLineSelect();
-            updateForceLineSelect();
-            updateDistributiveLineSelect();
-            updateBodyLineSelect();
-            updateThermalLineSelect();
-            updateMaterialLineSelect();
-        } catch (error) {
-            console.error('Error adding line:', error);
-        }
+        const response = await fetch('/add-line', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(newLine)
+        });
+        const data = await response.json();
+        newLine.id = data.id;
+        updateLineSelect();
+        updateForceLineSelect();
+        updateDistributiveLineSelect();
+        updateBodyLineSelect();
+        updateThermalLineSelect();
+        updateMaterialLineSelect();
     }
     if (translating) {
         canvas.removeEventListener('mousemove', translateGrid);
@@ -138,19 +146,15 @@ function translateGrid(e) {
 }
 
 document.getElementById('clearStorage').addEventListener('click', async () => {
-    try {
-        await fetch('/clear-lines', { method: 'POST' });
-        lines[sessionID] = [];
-        draw();
-        updateLineSelect();
-        updateForceLineSelect();
-        updateDistributiveLineSelect();
-        updateBodyLineSelect();
-        updateThermalLineSelect();
-        updateMaterialLineSelect();
-    } catch (error) {
-        console.error('Error clearing lines:', error);
-    }
+    await fetch('/clear-lines', { method: 'POST' });
+    lines = [];
+    draw();
+    updateLineSelect();
+    updateForceLineSelect();
+    updateDistributiveLineSelect();
+    updateBodyLineSelect();
+    updateThermalLineSelect();
+    updateMaterialLineSelect();
 });
 
 document.getElementById('translateGrid').addEventListener('click', () => {
@@ -165,7 +169,7 @@ document.getElementById('translateGrid').addEventListener('click', () => {
 function updateLineSelect() {
     const lineSelect = document.getElementById('lineSelect');
     lineSelect.innerHTML = '<option value="">Select a line to highlight</option>';
-    (lines[sessionID] || []).forEach((line, index) => {
+    lines.forEach((line, index) => {
         const option = document.createElement('option');
         option.value = index;
         option.textContent = `Line ${index + 1}`;
@@ -176,7 +180,7 @@ function updateLineSelect() {
 function updateForceLineSelect() {
     const lineSelectForce = document.getElementById('lineSelectForce');
     lineSelectForce.innerHTML = '<option value="">Select a line</option>';
-    (lines[sessionID] || []).forEach((line, index) => {
+    lines.forEach((line, index) => {
         const option = document.createElement('option');
         option.value = index;
         option.textContent = `Line ${index + 1}`;
@@ -187,7 +191,7 @@ function updateForceLineSelect() {
 function updateDistributiveLineSelect() {
     const lineSelectDistributive = document.getElementById('lineSelectDistributive');
     lineSelectDistributive.innerHTML = '<option value="">Select a line</option>';
-    (lines[sessionID] || []).forEach((line, index) => {
+    lines.forEach((line, index) => {
         const option = document.createElement('option');
         option.value = index;
         option.textContent = `Line ${index + 1}`;
@@ -198,7 +202,7 @@ function updateDistributiveLineSelect() {
 function updateBodyLineSelect() {
     const lineSelectBody = document.getElementById('lineSelectBody');
     lineSelectBody.innerHTML = '<option value="">Select a line</option>';
-    (lines[sessionID] || []).forEach((line, index) => {
+    lines.forEach((line, index) => {
         const option = document.createElement('option');
         option.value = index;
         option.textContent = `Line ${index + 1}`;
@@ -209,7 +213,7 @@ function updateBodyLineSelect() {
 function updateThermalLineSelect() {
     const lineSelectThermal = document.getElementById('lineSelectThermal');
     lineSelectThermal.innerHTML = '<option value="">Select a line</option>';
-    (lines[sessionID] || []).forEach((line, index) => {
+    lines.forEach((line, index) => {
         const option = document.createElement('option');
         option.value = index;
         option.textContent = `Line ${index + 1}`;
@@ -220,7 +224,7 @@ function updateThermalLineSelect() {
 function updateMaterialLineSelect() {
     const lineSelectMaterial = document.getElementById('lineSelectMaterial');
     lineSelectMaterial.innerHTML = '<option value="">Select a line</option>';
-    (lines[sessionID] || []).forEach((line, index) => {
+    lines.forEach((line, index) => {
         const option = document.createElement('option');
         option.value = index;
         option.textContent = `Line ${index + 1}`;
@@ -229,27 +233,16 @@ function updateMaterialLineSelect() {
 }
 
 async function loadLines() {
-    try {
-        const response = await fetch('/get-lines');
-        const data = await response.json();
-        lines = data.reduce((acc, line) => {
-            const { session_id } = line;
-            if (!acc[session_id]) {
-                acc[session_id] = [];
-            }
-            acc[session_id].push(line);
-            return acc;
-        }, {});
-        draw();
-        updateLineSelect();
-        updateForceLineSelect();
-        updateDistributiveLineSelect();
-        updateBodyLineSelect();
-        updateThermalLineSelect();
-        updateMaterialLineSelect();
-    } catch (error) {
-        console.error('Error loading lines:', error);
-    }
+    const response = await fetch('/get-lines');
+    const data = await response.json();
+    lines = data;
+    draw();
+    updateLineSelect();
+    updateForceLineSelect();
+    updateDistributiveLineSelect();
+    updateBodyLineSelect();
+    updateThermalLineSelect();
+    updateMaterialLineSelect();
 }
 
 loadLines();
