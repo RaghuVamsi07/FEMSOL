@@ -5,11 +5,12 @@ app = Flask(__name__, static_folder='static')
 
 # Database configuration
 db_config = {
-    'user': 'femsol_user',
+    'user': 'femsol',
     'password': 'Dreamsneverdie21',
-    'host': 'database-1.c1c8ug44ytox.eu-north-1.rds.amazonaws.com',  # Replace with your RDS endpoint
+    'host': 'database-1.c1c8ug44ytox.eu-north-1.rds.amazonaws.com',
     'database': 'femsol_db'
 }
+
 
 def get_db_connection():
     conn = mysql.connector.connect(**db_config)
