@@ -1,3 +1,7 @@
+if (typeof sessionID === 'undefined') {
+    var sessionID = 'default_session'; // Ensure sessionID is defined once
+}
+
 const lineSelect = document.getElementById('lineSelect');
 const lineSelectForce = document.getElementById('lineSelectForce');
 const lineSelectDistributive = document.getElementById('lineSelectDistributive');
@@ -12,7 +16,6 @@ const y2Input = document.getElementById('y2');
 const removeLineBtn = document.getElementById('removeLine');
 const zoomInBtn = document.getElementById('zoomIn');
 const zoomOutBtn = document.getElementById('zoomOut');
-const sessionID = 'default_session'; // This should be dynamically set per user session
 
 lineSelect.addEventListener('change', () => {
     const selectedIndex = lineSelect.value;
