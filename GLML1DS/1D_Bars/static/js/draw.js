@@ -101,19 +101,23 @@ canvas.addEventListener('mouseup', async () => {
         lines[sessionID].push(newLine);
 
         // Send line data to the server
-        const response = await fetch('/add-line', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(newLine)
-        });
-        const data = await response.json();
-        newLine.id = data.id;
-        updateLineSelect();
-        updateForceLineSelect();
-        updateDistributiveLineSelect();
-        updateBodyLineSelect();
-        updateThermalLineSelect();
-        updateMaterialLineSelect();
+        try {
+            const response = await fetch('/add-line', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newLine)
+            });
+            const data = await response.json();
+            newLine.id = data.id;
+            updateLineSelect();
+            updateForceLineSelect();
+            updateDistributiveLineSelect();
+            updateBodyLineSelect();
+            updateThermalLineSelect();
+            updateMaterialLineSelect();
+        } catch (error) {
+            console.error('Error adding line:', error);
+        }
     }
     if (translating) {
         canvas.removeEventListener('mousemove', translateGrid);
@@ -132,15 +136,19 @@ function translateGrid(e) {
 }
 
 document.getElementById('clearStorage').addEventListener('click', async () => {
-    await fetch('/clear-lines', { method: 'POST' });
-    lines[sessionID] = [];
-    draw();
-    updateLineSelect();
-    updateForceLineSelect();
-    updateDistributiveLineSelect();
-    updateBodyLineSelect();
-    updateThermalLineSelect();
-    updateMaterialLineSelect();
+    try {
+        await fetch('/clear-lines', { method: 'POST' });
+        lines[sessionID] = [];
+        draw();
+        updateLineSelect();
+        updateForceLineSelect();
+        updateDistributiveLineSelect();
+        updateBodyLineSelect();
+        updateThermalLineSelect();
+        updateMaterialLineSelect();
+    } catch (error) {
+        console.error('Error clearing lines:', error);
+    }
 });
 
 document.getElementById('translateGrid').addEventListener('click', () => {
@@ -219,23 +227,27 @@ function updateMaterialLineSelect() {
 }
 
 async function loadLines() {
-    const response = await fetch('/get-lines');
-    const data = await response.json();
-    lines = data.reduce((acc, line) => {
-        const { session_id } = line;
-        if (!acc[session_id]) {
-            acc[session_id] = [];
-        }
-        acc[session_id].push(line);
-        return acc;
-    }, {});
-    draw();
-    updateLineSelect();
-    updateForceLineSelect();
-    updateDistributiveLineSelect();
-    updateBodyLineSelect();
-    updateThermalLineSelect();
-    updateMaterialLineSelect();
+    try {
+        const response = await fetch('/get-lines');
+        const data = await response.json();
+        lines = data.reduce((acc, line) => {
+            const { session_id } = line;
+            if (!acc[session_id]) {
+                acc[session_id] = [];
+            }
+            acc[session_id].push(line);
+            return acc;
+        }, {});
+        draw();
+        updateLineSelect();
+        updateForceLineSelect();
+        updateDistributiveLineSelect();
+        updateBodyLineSelect();
+        updateThermalLineSelect();
+        updateMaterialLineSelect();
+    } catch (error) {
+        console.error('Error loading lines:', error);
+    }
 }
 
 loadLines();
