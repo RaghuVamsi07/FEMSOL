@@ -2,22 +2,6 @@ if (typeof sessionID === 'undefined') {
     var sessionID = getSessionID();
 }
 
-function getSessionID() {
-    const name = 'session_id=';
-    const decodedCookie = decodeURIComponent(document.cookie);
-    const ca = decodedCookie.split(';');
-    for (let i = 0; i < ca.length; i++) {
-        let c = ca[i];
-        while (c.charAt(0) == ' ') {
-            c = c.substring(1);
-        }
-        if (c.indexOf(name) == 0) {
-            return c.substring(name.length, c.length);
-        }
-    }
-    return "";
-}
-
 const lineSelect = document.getElementById('lineSelect');
 const lineSelectForce = document.getElementById('lineSelectForce');
 const lineSelectDistributive = document.getElementById('lineSelectDistributive');
@@ -37,7 +21,7 @@ lineSelect.addEventListener('change', () => {
     const selectedIndex = lineSelect.value;
     if (selectedIndex === "") return;
 
-    const selectedLine = lines[selectedIndex];
+    const selectedLine = lines[sessionID][selectedIndex];
     highlightLine(selectedLine);
     x1Input.value = selectedLine.x1;
     y1Input.value = selectedLine.y1;
@@ -51,7 +35,7 @@ lineSelect.addEventListener('change', () => {
         if (selectedIndex === "") return;
 
         const updatedLine = {
-            ...lines[selectedIndex],
+            ...lines[sessionID][selectedIndex],
             x1: parseInt(x1Input.value),
             y1: parseInt(y1Input.value),
             x2: parseInt(x2Input.value),
@@ -59,7 +43,7 @@ lineSelect.addEventListener('change', () => {
         };
 
         try {
-            const response = await fetch(`/update-line/${lines[selectedIndex].id}`, {
+            const response = await fetch(`/update-line/${lines[sessionID][selectedIndex].id}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json'
@@ -68,9 +52,9 @@ lineSelect.addEventListener('change', () => {
             });
             const result = await response.json();
             if (result.status === 'success') {
-                lines[selectedIndex] = updatedLine;
+                lines[sessionID][selectedIndex] = updatedLine;
                 draw();
-                highlightLine(lines[selectedIndex]);
+                highlightLine(lines[sessionID][selectedIndex]);
             } else {
                 console.error('Failed to update line');
             }
@@ -86,7 +70,7 @@ lineSelects.forEach(select => {
         const selectedIndex = e.target.value;
         if (selectedIndex === "") return;
 
-        const selectedLine = lines[selectedIndex];
+        const selectedLine = lines[sessionID][selectedIndex];
         highlightLine(selectedLine);
     });
 });
@@ -96,12 +80,12 @@ removeLineBtn.addEventListener('click', async () => {
     if (selectedIndex === "") return;
 
     try {
-        const response = await fetch(`/delete-line/${lines[selectedIndex].id}`, {
+        const response = await fetch(`/delete-line/${lines[sessionID][selectedIndex].id}`, {
             method: 'DELETE'
         });
         const result = await response.json();
         if (result.status === 'success') {
-            lines.splice(selectedIndex, 1);
+            lines[sessionID].splice(selectedIndex, 1);
             updateLineSelect();
             updateForceLineSelect();
             updateDistributiveLineSelect();
