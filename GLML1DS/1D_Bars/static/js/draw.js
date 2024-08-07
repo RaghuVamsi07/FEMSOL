@@ -8,6 +8,9 @@ let lines = {};
 let scale = 1;
 let originX = canvas.width / 2;
 let originY = canvas.height / 2;
+if (typeof sessionID === 'undefined') {
+    var sessionID = 'default_session'; // Ensure sessionID is defined once
+}
 
 function resizeCanvas() {
     canvas.width = canvas.parentElement.clientWidth;
