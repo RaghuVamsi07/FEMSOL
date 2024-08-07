@@ -1,3 +1,7 @@
+if (typeof sessionID === 'undefined') {
+    var sessionID = getSessionID();
+}
+
 function getSessionID() {
     const name = 'session_id=';
     const decodedCookie = decodeURIComponent(document.cookie);
@@ -13,8 +17,6 @@ function getSessionID() {
     }
     return "";
 }
-
-const sessionID = getSessionID();
 
 const lineSelect = document.getElementById('lineSelect');
 const lineSelectForce = document.getElementById('lineSelectForce');
