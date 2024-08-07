@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Line Drawing and Highlighting</title>
-   <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/styles.css') }}">
-    <script src="{{ url_for('static', filename='js/math.min.js') }}"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    
 </head>
 <body>
     <header>
@@ -112,15 +112,16 @@
     <footer>
         <p>DREAMS NEVER DIE</p>
     </footer>
-    <script src="{{ url_for('static', filename='js/workspace.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/material_analysis.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/force.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/data.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/distributive_force.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/thermal_force.js') }}"></script>
+
+     <script src="{{ url_for('static', filename='js/data.js') }}"></script>
     <script src="{{ url_for('static', filename='js/draw.js') }}"></script>
     <script src="{{ url_for('static', filename='js/pointer.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/force.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/distributive_force.js') }}"></script>
     <script src="{{ url_for('static', filename='js/body_force.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/thermal_force.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/material_analysis.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/workspace.js') }}"></script>
 <script>
         function startAnalysis() {
             window.open('/results', '_blank');
