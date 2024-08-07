@@ -7,7 +7,7 @@ app = Flask(__name__, static_folder='static')
 db_config = {
     'user': 'femsol_user',
     'password': 'Dreamsneverdie@21',
-    'host': 'your-rds-endpoint',  # Replace with your RDS endpoint
+    'host': 'database-1.c1c8ug44ytox.eu-north-1.rds.amazonaws.com',  # Replace with your RDS endpoint
     'database': 'femsol_db'
 }
 
