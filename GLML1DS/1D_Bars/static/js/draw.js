@@ -8,17 +8,6 @@ let lines = [];
 let scale = 1;
 let originX = canvas.width / 2;
 let originY = canvas.height / 2;
-let sessionId;
-
-// Function to get session ID from the server
-async function getSessionId() {
-    const response = await fetch('/get-session-id');
-    const data = await response.json();
-    sessionId = data.session_id;
-}
-
-// Call getSessionId when the page loads
-window.onload = getSessionId;
 
 function resizeCanvas() {
     canvas.width = canvas.parentElement.clientWidth;
@@ -104,7 +93,7 @@ canvas.addEventListener('mousemove', (e) => {
 canvas.addEventListener('mouseup', async () => {
     if (drawing) {
         drawing = false;
-        const newLine = { x1, y1, x2, y2, session_id: sessionId };
+        const newLine = { x1, y1, x2, y2, session_id: 'default_session' };
         lines.push(newLine);
 
         // Send line data to the server
