@@ -13,18 +13,6 @@ const removeLineBtn = document.getElementById('removeLine');
 const zoomInBtn = document.getElementById('zoomIn');
 const zoomOutBtn = document.getElementById('zoomOut');
 
-let sessionId;
-
-// Function to get session ID from the server
-async function getSessionId() {
-    const response = await fetch('/get-session-id');
-    const data = await response.json();
-    sessionId = data.session_id;
-}
-
-// Call getSessionId when the page loads
-window.onload = getSessionId;
-
 lineSelect.addEventListener('change', () => {
     const selectedIndex = lineSelect.value;
     if (selectedIndex === "") return;
@@ -47,8 +35,7 @@ lineSelect.addEventListener('change', () => {
             x1: parseInt(x1Input.value),
             y1: parseInt(y1Input.value),
             x2: parseInt(x2Input.value),
-            y2: parseInt(y2Input.value),
-            session_id: sessionId
+            y2: parseInt(y2Input.value)
         };
         
         try {
@@ -119,11 +106,7 @@ removeLineBtn.addEventListener('click', async () => {
 
     try {
         const response = await fetch(`/delete-line/${lines[selectedIndex].id}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ session_id: sessionId })
+            method: 'DELETE'
         });
         const result = await response.json();
         if (result.status === 'success') {
