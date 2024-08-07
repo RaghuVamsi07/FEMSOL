@@ -1,13 +1,13 @@
 from flask import Flask, request, jsonify, render_template
 import mysql.connector
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static')
 
 # Database configuration
 db_config = {
     'user': 'femsol_user',
     'password': 'Dreamsneverdie@21',
-    'host': 'database-1.c1c8ug44ytox.eu-north-1.rds.amazonaws.com',
+    'host': 'your-rds-endpoint',  # Replace with your RDS endpoint
     'database': 'femsol_db'
 }
 
@@ -22,6 +22,7 @@ def index():
 @app.route('/results')
 def results():
     return render_template('results.html')
+
 
 @app.route('/add-line', methods=['POST'])
 def add_line():
