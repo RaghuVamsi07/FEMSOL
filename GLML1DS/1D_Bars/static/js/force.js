@@ -60,6 +60,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const selectedLine = lines[selectedIndex];
 
+        if (!selectedLine) {
+            alert("Selected line is not valid.");
+            return;
+        }
+
         if (!isPointOnLine(selectedLine, x, y)) {
             alert("The forces are out of the body.");
             return;
