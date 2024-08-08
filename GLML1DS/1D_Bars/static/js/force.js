@@ -6,16 +6,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     const forceYInput = document.getElementById('forceY');
     const addForceBtn = document.getElementById('addForce');
     let lines = [];
-    const sessionID = 'default_session'; // Replace with actual session ID management logic
+    const sessionID = getCookie('session_id'); // Retrieve session ID from cookies
 
     // Function to fetch lines from the backend
     async function fetchLines() {
-        const response = await fetch('/get-lines');
-        const data = await response.json();
-        console.log('Fetched data:', data); // Log fetched data to check contents
-        lines = data.filter(line => line.session_id === sessionID);
-        console.log('Filtered lines:', lines); // Log filtered lines array to check contents
-        updateForceLineSelect();
+        try {
+            const response = await fetch('/get-lines');
+            const data = await response.json();
+            console.log('Fetched data:', data); // Log fetched data to check contents
+            lines = data;
+            updateForceLineSelect();
+        } catch (error) {
+            console.error('Error fetching lines:', error); // Log any errors during fetching
+        }
     }
 
     // Function to populate the line selection dropdown
@@ -99,17 +102,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Function to clear storage
     document.getElementById('clearStorage').addEventListener('click', async () => {
         try {
-            const response = await fetch('/clear-lines', {
+            const response = await fetch('/clear-storage', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ session_id: sessionID })
+                }
             });
             const result = await response.json();
             if (result.status === 'success') {
                 lines = [];
-                draw();
                 updateForceLineSelect();
                 // Clear additional dropdowns if necessary
                 // updateDistributiveLineSelect();
@@ -117,10 +118,17 @@ document.addEventListener('DOMContentLoaded', async () => {
                 // updateThermalLineSelect();
                 // updateMaterialLineSelect();
             } else {
-                console.error('Failed to clear lines');
+                console.error('Failed to clear storage');
             }
         } catch (error) {
-            console.error('Error clearing lines:', error);
+            console.error('Error clearing storage:', error);
         }
     });
+
+    // Function to get a cookie by name
+    function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+    }
 });
