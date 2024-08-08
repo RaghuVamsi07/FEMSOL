@@ -7,6 +7,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const addForceBtn = document.getElementById('addForce');
     let forces = [];
 
+    function isPointOnLine(line, x, y) {
+        const x1 = line.x1, y1 = line.y1, x2 = line.x2, y2 = line.y2;
+        const distance = Math.abs((y2 - y1) * x - (x2 - x1) * y + x2 * y1 - y2 * x1) / Math.sqrt((y2 - y1) ** 2 + (x2 - x1) ** 2);
+        const lineLength = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
+        const pointToStart = Math.sqrt((x - x1) ** 2 + (y - y1) ** 2);
+        const pointToEnd = Math.sqrt((x - x2) ** 2 + (y - y2) ** 2);
+        return (distance < 1e-5 && pointToStart <= lineLength && pointToEnd <= lineLength);
+    }
+
     async function loadForces() {
         const response = await fetch('/get-forces');
         if (response.ok) {
