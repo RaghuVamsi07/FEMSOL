@@ -14,8 +14,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             const response = await fetch('/get-lines');
             const data = await response.json();
             console.log('Fetched data:', data); // Log fetched data to check contents
-            lines = data;
-            updateForceLineSelect();
+            if (Array.isArray(data) && data.length > 0) {
+                lines = data;
+                updateForceLineSelect();
+            } else {
+                console.error('No lines fetched or invalid data format:', data);
+            }
         } catch (error) {
             console.error('Error fetching lines:', error); // Log any errors during fetching
         }
@@ -132,4 +136,3 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (parts.length === 2) return parts.pop().split(';').shift();
     }
 });
-
