@@ -97,5 +97,103 @@ def get_lines():
     conn.close()
     return jsonify([{'id': line[0], 'x1': line[1], 'y1': line[2], 'x2': line[3], 'y2': line[4]} for line in lines])
 
+@app.route('/add-force', methods=['POST'])
+def add_force():
+    data = request.json
+    session_id = session.get('id', 'default_session')
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO forces_table (ip_address, line_id, fx, fy, x, y) VALUES (%s, %s, %s, %s, %s, %s)", 
+                   (session_id, data['line_id'], data['fx'], data['fy'], data['x'], data['y']))
+    conn.commit()
+    force_id = cursor.lastrowid
+    cursor.close()
+    conn.close()
+    return jsonify({'id': force_id})
+
+@app.route('/update-force/<int:force_id>', methods=['PUT'])
+def update_force(force_id):
+    data = request.json
+    session_id = session.get('id', 'default_session')
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("UPDATE forces_table SET fx = %s, fy = %s, x = %s, y = %s WHERE id = %s AND ip_address = %s",
+                   (data['fx'], data['fy'], data['x'], data['y'], force_id, session_id))
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return jsonify({'status': 'success'})
+
+@app.route('/delete-force/<int:force_id>', methods=['DELETE'])
+def delete_force(force_id):
+    session_id = session.get('id', 'default_session')
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM forces_table WHERE id = %s AND ip_address = %s", (force_id, session_id))
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return jsonify({'status': 'success'})
+
+@app.route('/get-forces', methods=['GET'])
+def get_forces():
+    session_id = session.get('id', 'default_session')
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, line_id, fx, fy, x, y FROM forces_table WHERE ip_address = %s", (session_id,))
+    forces = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return jsonify([{'id': force[0], 'line_id': force[1], 'fx': force[2], 'fy': force[3], 'x': force[4], 'y': force[5]} for force in forces])
+
+@app.route('/add-distributive-force', methods=['POST'])
+def add_distributive_force():
+    data = request.json
+    session_id = session.get('id', 'default_session')
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO distributive_forces_table (ip_address, line_id, start_fx, start_fy, end_fx, end_fy, start_x, start_y, end_x, end_y) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)", 
+                   (session_id, data['line_id'], data['start_fx'], data['start_fy'], data['end_fx'], data['end_fy'], data['start_x'], data['start_y'], data['end_x'], data['end_y']))
+    conn.commit()
+    distributive_force_id = cursor.lastrowid
+    cursor.close()
+    conn.close()
+    return jsonify({'id': distributive_force_id})
+
+@app.route('/update-distributive-force/<int:distributive_force_id>', methods=['PUT'])
+def update_distributive_force(distributive_force_id):
+    data = request.json
+    session_id = session.get('id', 'default_session')
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("UPDATE distributive_forces_table SET start_fx = %s, start_fy = %s, end_fx = %s, end_fy = %s, start_x = %s, start_y = %s, end_x = %s, end_y = %s WHERE id = %s AND ip_address = %s",
+                   (data['start_fx'], data['start_fy'], data['end_fx'], data['end_fy'], data['start_x'], data['start_y'], data['end_x'], data['end_y'], distributive_force_id, session_id))
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return jsonify({'status': 'success'})
+
+@app.route('/delete-distributive-force/<int:distributive_force_id>', methods=['DELETE'])
+def delete_distributive_force(distributive_force_id):
+    session_id = session.get('id', 'default_session')
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM distributive_forces_table WHERE id = %s AND ip_address = %s", (distributive_force_id, session_id))
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return jsonify({'status': 'success'})
+
+@app.route('/get-distributive-forces', methods=['GET'])
+def get_distributive_forces():
+    session_id = session.get('id', 'default_session')
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, line_id, start_fx, start_fy, end_fx, end_fy, start_x, start_y, end_x, end_y FROM distributive_forces_table WHERE ip_address = %s", (session_id,))
+    distributive_forces = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return jsonify([{'id': df[0], 'line_id': df[1], 'start_fx': df[2], 'start_fy': df[3], 'end_fx': df[4], 'end_fy': df[5], 'start_x': df[6], 'start_y': df[7], 'end_x': df[8], 'end_y': df[9]} for df in distributive_forces])
+
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000, debug=True)
