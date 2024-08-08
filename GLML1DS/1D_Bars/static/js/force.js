@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Function to populate the line selection dropdown
     function updateForceLineSelect() {
         const lines = JSON.parse(localStorage.getItem('lines')) || [];
+        console.log('Lines from localStorage:', lines);  // Debugging line to print lines array
         lineSelectForce.innerHTML = '<option value="">Select a line</option>';
         lines.forEach((line, index) => {
             const option = document.createElement('option');
@@ -36,6 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
     addForceBtn.addEventListener('click', () => {
         const selectedIndex = lineSelectForce.value;
         const lines = JSON.parse(localStorage.getItem('lines')) || [];
+        console.log('Selected line index:', selectedIndex);  // Debugging line to print selected line index
 
         if (selectedIndex === "" || !lines[selectedIndex]) {
             alert("Selected line does not exist.");
@@ -53,6 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const selectedLine = lines[selectedIndex];
+        console.log('Selected line:', selectedLine);  // Debugging line to print selected line details
 
         if (!isPointOnLine(selectedLine, x, y)) {
             alert("The forces are out of the body.");
