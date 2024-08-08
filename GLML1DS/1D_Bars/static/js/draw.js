@@ -8,9 +8,24 @@ let lines = {};
 let scale = 1;
 let originX = canvas.width / 2;
 let originY = canvas.height / 2;
-if (typeof sessionID === 'undefined') {
-    var sessionID = 'default_session'; // Ensure sessionID is defined once
+
+function getSessionID() {
+    const name = 'session_id=';
+    const decodedCookie = decodeURIComponent(document.cookie);
+    const ca = decodedCookie.split(';');
+    for (let i = 0; i < ca.length; i++) {
+        let c = ca[i];
+        while (c.charAt(0) == ' ') {
+            c = c.substring(1);
+        }
+        if (c.indexOf(name) == 0) {
+            return c.substring(name.length, c.length);
+        }
+    }
+    return "";
 }
+
+const sessionID = getSessionID();
 
 function resizeCanvas() {
     canvas.width = canvas.parentElement.clientWidth;
@@ -75,14 +90,14 @@ canvas.addEventListener('mousedown', (e) => {
     } else if (!translating) {
         drawing = true;
         x1 = (e.offsetX - originX) / scale;
-        y1 = (originY - e.offsetY) / scale;
+        y1 = (originY - e.offsetX) / scale;
     }
 });
 
 canvas.addEventListener('mousemove', (e) => {
     if (drawing) {
         x2 = (e.offsetX - originX) / scale;
-        y2 = (originY - e.offsetY) / scale;
+        y2 = (originY - e.offsetX) / scale;
         draw();
         ctx.strokeStyle = 'black';
         ctx.lineWidth = 2;
