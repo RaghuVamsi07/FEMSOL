@@ -1,19 +1,23 @@
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     const lineSelectForce = document.getElementById('lineSelectForce');
     const fxInput = document.getElementById('fx');
     const fyInput = document.getElementById('fy');
     const forceXInput = document.getElementById('forceX');
     const forceYInput = document.getElementById('forceY');
     const addForceBtn = document.getElementById('addForce');
+    let lines = [];
+    const sessionID = 'default_session'; // Replace with actual session ID management logic
 
-    async function getUserIP() {
-        const response = await fetch('https://api.ipify.org?format=json');
+    // Function to fetch lines from the backend
+    async function fetchLines() {
+        const response = await fetch('/get-lines');
         const data = await response.json();
-        return data.ip;
+        lines = data.filter(line => line.session_id === sessionID);
+        updateForceLineSelect();
     }
 
+    // Function to populate the line selection dropdown
     function updateForceLineSelect() {
-        const lines = JSON.parse(localStorage.getItem('lines')) || [];
         lineSelectForce.innerHTML = '<option value="">Select a line</option>';
         lines.forEach((line, index) => {
             const option = document.createElement('option');
@@ -23,8 +27,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    updateForceLineSelect();
+    // Load initial data and populate dropdown
+    await fetchLines();
 
+    // Function to check if the point is on the line
     function isPointOnLine(line, x, y) {
         const x1 = line.x1, y1 = line.y1, x2 = line.x2, y2 = line.y2;
         const distance = Math.abs((y2 - y1) * x - (x2 - x1) * y + x2 * y1 - y2 * x1) / Math.sqrt((y2 - y1) ** 2 + (x2 - x1) ** 2);
@@ -34,6 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return (distance < 1e-5 && pointToStart <= lineLength && pointToEnd <= lineLength);
     }
 
+    // Function to add force to the selected line
     addForceBtn.addEventListener('click', async () => {
         const selectedIndex = lineSelectForce.value;
         if (selectedIndex === "") {
@@ -51,7 +58,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const lines = JSON.parse(localStorage.getItem('lines')) || [];
         const selectedLine = lines[selectedIndex];
 
         if (!isPointOnLine(selectedLine, x, y)) {
@@ -59,8 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const ip_address = await getUserIP();
-        const newForce = { ip_address, line_id: selectedIndex, fx, fy, x, y };
+        const newForce = { session_id: sessionID, line_id: selectedLine.id, fx, fy, x, y };
 
         fetch('/save_force', {
             method: 'POST',
@@ -80,5 +85,33 @@ document.addEventListener('DOMContentLoaded', () => {
         .catch((error) => {
             console.error('Error:', error);
         });
+    });
+
+    // Function to clear storage
+    document.getElementById('clearStorage').addEventListener('click', async () => {
+        try {
+            const response = await fetch('/clear-lines', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ session_id: sessionID })
+            });
+            const result = await response.json();
+            if (result.status === 'success') {
+                lines = [];
+                draw();
+                updateForceLineSelect();
+                // Clear additional dropdowns if necessary
+                // updateDistributiveLineSelect();
+                // updateBodyLineSelect();
+                // updateThermalLineSelect();
+                // updateMaterialLineSelect();
+            } else {
+                console.error('Failed to clear lines');
+            }
+        } catch (error) {
+            console.error('Error clearing lines:', error);
+        }
     });
 });
