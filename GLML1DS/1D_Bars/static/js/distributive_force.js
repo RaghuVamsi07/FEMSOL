@@ -1,12 +1,21 @@
 document.addEventListener('DOMContentLoaded', () => {
     const lineSelectDistributive = document.getElementById('lineSelectDistributive');
-    const distributiveForceInput = document.getElementById('distributiveForce');
-    const x1DistributiveInput = document.getElementById('x1Distributive');
-    const y1DistributiveInput = document.getElementById('y1Distributive');
-    const x2DistributiveInput = document.getElementById('x2Distributive');
-    const y2DistributiveInput = document.getElementById('y2Distributive');
+    const startFxInput = document.getElementById('startFx');
+    const startFyInput = document.getElementById('startFy');
+    const endFxInput = document.getElementById('endFx');
+    const endFyInput = document.getElementById('endFy');
+    const startXInput = document.getElementById('startX');
+    const startYInput = document.getElementById('startY');
+    const endXInput = document.getElementById('endX');
+    const endYInput = document.getElementById('endY');
     const addDistributiveForceBtn = document.getElementById('addDistributiveForce');
-    let distributiveForces = JSON.parse(localStorage.getItem('distributiveForces')) || [];
+    let distributiveForces = [];
+
+    async function loadDistributiveForces() {
+        const response = await fetch('/get-distributive-forces');
+        distributiveForces = await response.json();
+        updateDistributiveLineSelect();
+    }
 
     function updateDistributiveLineSelect() {
         const lines = JSON.parse(localStorage.getItem('lines')) || [];
@@ -19,7 +28,22 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    updateDistributiveLineSelect();
+    async function addDistributiveForce(lineID, startFx, startFy, endFx, endFy, startX, startY, endX, endY) {
+        const newDistributiveForce = { line_id: lineID, start_fx: startFx, start_fy: startFy, end_fx: endFx, end_fy: endFy, start_x: startX, start_y: startY, end_x: endX, end_y: endY };
+        try {
+            const response = await fetch('/add-distributive-force', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newDistributiveForce)
+            });
+            const data = await response.json();
+            newDistributiveForce.id = data.id;
+            distributiveForces.push(newDistributiveForce);
+            alert('Distributive Force added successfully.');
+        } catch (error) {
+            console.error('Error adding distributive force:', error);
+        }
+    }
 
     addDistributiveForceBtn.addEventListener('click', () => {
         const selectedIndex = lineSelectDistributive.value;
@@ -28,13 +52,16 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const forceExpression = distributiveForceInput.value;
-        const x1 = parseFloat(x1DistributiveInput.value);
-        const y1 = parseFloat(y1DistributiveInput.value);
-        const x2 = parseFloat(x2DistributiveInput.value);
-        const y2 = parseFloat(y2DistributiveInput.value);
+        const startFx = parseFloat(startFxInput.value);
+        const startFy = parseFloat(startFyInput.value);
+        const endFx = parseFloat(endFxInput.value);
+        const endFy = parseFloat(endFyInput.value);
+        const startX = parseFloat(startXInput.value);
+        const startY = parseFloat(startYInput.value);
+        const endX = parseFloat(endXInput.value);
+        const endY = parseFloat(endYInput.value);
 
-        if (!forceExpression || isNaN(x1) || isNaN(y1) || isNaN(x2) || isNaN(y2)) {
+        if (isNaN(startFx) || isNaN(startFy) || isNaN(endFx) || isNaN(endFy) || isNaN(startX) || isNaN(startY) || isNaN(endX) || isNaN(endY)) {
             alert("Please enter valid force and coordinate values.");
             return;
         }
@@ -42,37 +69,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const lines = JSON.parse(localStorage.getItem('lines')) || [];
         const selectedLine = lines[selectedIndex];
 
-        if (!isPointOnLine(selectedLine, x1, y1) || !isPointOnLine(selectedLine, x2, y2)) {
+        if (!isPointOnLine(selectedLine, startX, startY) || !isPointOnLine(selectedLine, endX, endY)) {
             alert("The coordinates are out of the body.");
             return;
         }
 
-        try {
-            const compiledExpression = math.compile(forceExpression);
-
-            const newDistributiveForce = { 
-                lineIndex: selectedIndex, 
-                expression: forceExpression, 
-                compiledExpression, 
-                x1, 
-                y1, 
-                x2, 
-                y2 
-            };
-            distributiveForces.push(newDistributiveForce);
-            localStorage.setItem('distributiveForces', JSON.stringify(distributiveForces));
-            alert("Distributive Force added successfully.");
-        } catch (error) {
-            alert("Invalid mathematical expression.");
-        }
+        addDistributiveForce(selectedIndex, startFx, startFy, endFx, endFy, startX, startY, endX, endY);
     });
 
-    function isPointOnLine(line, x, y) {
-        const x1 = line.x1, y1 = line.y1, x2 = line.x2, y2 = line.y2;
-        const distance = Math.abs((y2 - y1) * x - (x2 - x1) * y + x2 * y1 - y2 * x1) / Math.sqrt((y2 - y1) ** 2 + (x2 - x1) ** 2);
-        const lineLength = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
-        const pointToStart = Math.sqrt((x - x1) ** 2 + (y - y1) ** 2);
-        const pointToEnd = Math.sqrt((x - x2) ** 2 + (y - y2) ** 2);
-        return (distance < 1e-5 && pointToStart <= lineLength && pointToEnd <= lineLength);
-    }
+    loadDistributiveForces();
 });
