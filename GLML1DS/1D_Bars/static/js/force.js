@@ -35,8 +35,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Function to add force to the selected line
     addForceBtn.addEventListener('click', () => {
         const selectedIndex = lineSelectForce.value;
-        if (selectedIndex === "") {
-            alert("Please select a line.");
+        const lines = JSON.parse(localStorage.getItem('lines')) || [];
+
+        if (selectedIndex === "" || !lines[selectedIndex]) {
+            alert("Selected line does not exist.");
             return;
         }
 
@@ -50,13 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const lines = JSON.parse(localStorage.getItem('lines')) || [];
         const selectedLine = lines[selectedIndex];
-
-        if (!selectedLine) {
-            alert("Selected line does not exist.");
-            return;
-        }
 
         if (!isPointOnLine(selectedLine, x, y)) {
             alert("The forces are out of the body.");
