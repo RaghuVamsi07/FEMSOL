@@ -1,6 +1,20 @@
-if (typeof sessionID === 'undefined') {
-    var sessionID = 'default_session'; // Ensure sessionID is defined once
+function getSessionID() {
+    const name = 'session_id=';
+    const decodedCookie = decodeURIComponent(document.cookie);
+    const ca = decodedCookie.split(';');
+    for (let i = 0; i < ca.length; i++) {
+        let c = ca[i];
+        while (c.charAt(0) == ' ') {
+            c = c.substring(1);
+        }
+        if (c.indexOf(name) == 0) {
+            return c.substring(name.length, c.length);
+        }
+    }
+    return "";
 }
+
+const sessionID = getSessionID();
 
 const lineSelect = document.getElementById('lineSelect');
 const lineSelectForce = document.getElementById('lineSelectForce');
@@ -122,9 +136,8 @@ zoomOutBtn.addEventListener('click', () => {
 });
 
 function updateLineSelect() {
-    const lineSelect = document.getElementById('lineSelect');
-    lineSelect.innerHTML = '<option value="">Select a line to highlight</option>';
-    (lines[sessionID] || []).forEach((line, index) => {
+    lineSelect.innerHTML = "";
+    lines.forEach((line, index) => {
         const option = document.createElement('option');
         option.value = index;
         option.textContent = `Line ${index + 1}`;
@@ -133,9 +146,8 @@ function updateLineSelect() {
 }
 
 function updateForceLineSelect() {
-    const lineSelectForce = document.getElementById('lineSelectForce');
-    lineSelectForce.innerHTML = '<option value="">Select a line</option>';
-    (lines[sessionID] || []).forEach((line, index) => {
+    lineSelectForce.innerHTML = "";
+    lines.forEach((line, index) => {
         const option = document.createElement('option');
         option.value = index;
         option.textContent = `Line ${index + 1}`;
@@ -144,9 +156,8 @@ function updateForceLineSelect() {
 }
 
 function updateDistributiveLineSelect() {
-    const lineSelectDistributive = document.getElementById('lineSelectDistributive');
-    lineSelectDistributive.innerHTML = '<option value="">Select a line</option>';
-    (lines[sessionID] || []).forEach((line, index) => {
+    lineSelectDistributive.innerHTML = "";
+    lines.forEach((line, index) => {
         const option = document.createElement('option');
         option.value = index;
         option.textContent = `Line ${index + 1}`;
@@ -155,9 +166,8 @@ function updateDistributiveLineSelect() {
 }
 
 function updateBodyLineSelect() {
-    const lineSelectBody = document.getElementById('lineSelectBody');
-    lineSelectBody.innerHTML = '<option value="">Select a line</option>';
-    (lines[sessionID] || []).forEach((line, index) => {
+    lineSelectBody.innerHTML = "";
+    lines.forEach((line, index) => {
         const option = document.createElement('option');
         option.value = index;
         option.textContent = `Line ${index + 1}`;
@@ -166,9 +176,8 @@ function updateBodyLineSelect() {
 }
 
 function updateThermalLineSelect() {
-    const lineSelectThermal = document.getElementById('lineSelectThermal');
-    lineSelectThermal.innerHTML = '<option value="">Select a line</option>';
-    (lines[sessionID] || []).forEach((line, index) => {
+    lineSelectThermal.innerHTML = "";
+    lines.forEach((line, index) => {
         const option = document.createElement('option');
         option.value = index;
         option.textContent = `Line ${index + 1}`;
@@ -177,9 +186,8 @@ function updateThermalLineSelect() {
 }
 
 function updateMaterialLineSelect() {
-    const lineSelectMaterial = document.getElementById('lineSelectMaterial');
-    lineSelectMaterial.innerHTML = '<option value="">Select a line</option>';
-    (lines[sessionID] || []).forEach((line, index) => {
+    lineSelectMaterial.innerHTML = "";
+    lines.forEach((line, index) => {
         const option = document.createElement('option');
         option.value = index;
         option.textContent = `Line ${index + 1}`;
