@@ -4,10 +4,11 @@ let drawing = false;
 let translating = false;
 let translateStartX, translateStartY;
 let x1, y1, x2, y2;
-let lines = {};
+let lines = {}; // Initialize lines object
 let scale = 1;
 let originX = canvas.width / 2;
 let originY = canvas.height / 2;
+
 if (typeof sessionID === 'undefined') {
     var sessionID = 'default_session'; // Ensure sessionID is defined once
 }
@@ -253,3 +254,4 @@ async function loadLines() {
 }
 
 loadLines();
+draw();
