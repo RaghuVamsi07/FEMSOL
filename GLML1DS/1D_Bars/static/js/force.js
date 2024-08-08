@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Function to fetch lines from the backend
     async function fetchLines() {
         try {
-            const response = await fetch('/get-lines');
+            const response = await fetch('/get-lines', { cache: 'no-cache' }); // Disable cache
             const data = await response.json();
             console.log('Fetched data:', data); // Log fetched data to check contents
             if (Array.isArray(data) && data.length > 0) {
@@ -94,6 +94,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         .then(data => {
             if (data.status === 'success') {
                 alert("Force added successfully.");
+                fetchLines(); // Fetch lines immediately after adding force
             } else {
                 console.error('Failed to save force');
             }
@@ -116,11 +117,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (result.status === 'success') {
                 lines = [];
                 updateForceLineSelect();
-                // Clear additional dropdowns if necessary
-                // updateDistributiveLineSelect();
-                // updateBodyLineSelect();
-                // updateThermalLineSelect();
-                // updateMaterialLineSelect();
             } else {
                 console.error('Failed to clear storage');
             }
