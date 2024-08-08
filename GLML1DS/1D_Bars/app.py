@@ -1,8 +1,8 @@
-from flask import Flask, request, jsonify, render_template, session, make_response
-import mysql.connector
 import os
+from flask import Flask, request, jsonify, render_template, session
 from flask_session import Session
-import uuid
+import mysql.connector
+from mysql.connector import Error
 
 app = Flask(__name__, static_folder='static')
 
@@ -14,7 +14,6 @@ app.config['SESSION_TYPE'] = 'filesystem'
 app.config['SESSION_PERMANENT'] = False
 app.config['SESSION_USE_SIGNER'] = True
 app.config['SESSION_KEY_PREFIX'] = 'session:'
-
 Session(app)
 
 # Database configuration
@@ -25,88 +24,89 @@ db_config = {
     'database': 'femsol_db'
 }
 
-def get_db_connection():
-    conn = mysql.connector.connect(**db_config)
-    return conn
+# Database connection
+def create_connection():
+    connection = None
+    try:
+        connection = mysql.connector.connect(**db_config)
+    except Error as e:
+        print(f"Error: '{e}'")
+    return connection
 
 @app.route('/')
 def index():
-    if 'session_id' not in request.cookies:
-        session_id = str(uuid.uuid4())
-        session['id'] = session_id
-        resp = make_response(render_template('1D_Bars.html'))
-        resp.set_cookie('session_id', session_id)
-        return resp
-    else:
-        session_id = request.cookies.get('session_id')
-        session['id'] = session_id
-        return render_template('1D_Bars.html')
+    return render_template('1D_Bars.html')
+
+@app.route('/get-lines', methods=['GET'])
+def get_lines():
+    connection = create_connection()
+    cursor = connection.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM lines_table")
+    lines = cursor.fetchall()
+    cursor.close()
+    connection.close()
+    return jsonify(lines)
 
 @app.route('/add-line', methods=['POST'])
 def add_line():
     data = request.json
-    session_id = request.cookies.get('session_id')
-    conn = get_db_connection()
-    cursor = conn.cursor()
+    connection = create_connection()
+    cursor = connection.cursor()
     query = "INSERT INTO lines_table (x1, y1, x2, y2, session_id) VALUES (%s, %s, %s, %s, %s)"
-    values = (data['x1'], data['y1'], data['x2'], data['y2'], session_id)
+    values = (data['x1'], data['y1'], data['x2'], data['y2'], data['session_id'])
     cursor.execute(query, values)
-    conn.commit()
+    connection.commit()
     line_id = cursor.lastrowid
     cursor.close()
-    conn.close()
+    connection.close()
     return jsonify({'id': line_id})
 
 @app.route('/update-line/<int:line_id>', methods=['PUT'])
 def update_line(line_id):
     data = request.json
-    session_id = request.cookies.get('session_id')
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    query = "UPDATE lines_table SET x1=%s, y1=%s, x2=%s, y2=%s WHERE id=%s AND session_id=%s"
-    values = (data['x1'], data['y1'], data['x2'], data['y2'], line_id, session_id)
+    connection = create_connection()
+    cursor = connection.cursor()
+    query = "UPDATE lines_table SET x1 = %s, y1 = %s, x2 = %s, y2 = %s WHERE id = %s"
+    values = (data['x1'], data['y1'], data['x2'], data['y2'], line_id)
     cursor.execute(query, values)
-    conn.commit()
+    connection.commit()
     cursor.close()
-    conn.close()
+    connection.close()
     return jsonify({'status': 'success'})
 
 @app.route('/delete-line/<int:line_id>', methods=['DELETE'])
 def delete_line(line_id):
-    session_id = request.cookies.get('session_id')
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    query = "DELETE FROM lines_table WHERE id=%s AND session_id=%s"
-    values = (line_id, session_id)
-    cursor.execute(query, values)
-    conn.commit()
+    connection = create_connection()
+    cursor = connection.cursor()
+    query = "DELETE FROM lines_table WHERE id = %s"
+    cursor.execute(query, (line_id,))
+    connection.commit()
     cursor.close()
-    conn.close()
+    connection.close()
     return jsonify({'status': 'success'})
 
 @app.route('/clear-lines', methods=['POST'])
 def clear_lines():
-    session_id = request.cookies.get('session_id')
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    query = "DELETE FROM lines_table WHERE session_id=%s"
-    cursor.execute(query, (session_id,))
-    conn.commit()
+    connection = create_connection()
+    cursor = connection.cursor()
+    cursor.execute("DELETE FROM lines_table")
+    connection.commit()
     cursor.close()
-    conn.close()
+    connection.close()
     return jsonify({'status': 'success'})
 
-@app.route('/get-lines', methods=['GET'])
-def get_lines():
-    session_id = request.cookies.get('session_id')
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    query = "SELECT id, x1, y1, x2, y2 FROM lines_table WHERE session_id=%s"
-    cursor.execute(query, (session_id,))
-    lines = cursor.fetchall()
+@app.route('/save_force', methods=['POST'])
+def save_force():
+    data = request.json
+    connection = create_connection()
+    cursor = connection.cursor()
+    query = "INSERT INTO forces_table (ip_address, line_id, fx, fy, x, y) VALUES (%s, %s, %s, %s, %s, %s)"
+    values = (data['ip_address'], data['line_id'], data['fx'], data['fy'], data['x'], data['y'])
+    cursor.execute(query, values)
+    connection.commit()
     cursor.close()
-    conn.close()
-    return jsonify([{'id': row[0], 'x1': row[1], 'y1': row[2], 'x2': row[3], 'y2': row[4]} for row in lines])
+    connection.close()
+    return jsonify({'status': 'success'})
 
-if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=5000, debug=True)
+if __name__ == '__main__':
+    app.run(debug=True, port=5000)
