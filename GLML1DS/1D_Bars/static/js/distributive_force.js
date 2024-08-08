@@ -13,8 +13,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function loadDistributiveForces() {
         const response = await fetch('/get-distributive-forces');
-        distributiveForces = await response.json();
-        updateDistributiveLineSelect();
+        if (response.ok) {
+            distributiveForces = await response.json();
+            updateDistributiveLineSelect();
+        } else {
+            console.error('Failed to load distributive forces:', response.statusText);
+        }
     }
 
     function updateDistributiveLineSelect() {
