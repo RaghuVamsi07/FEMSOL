@@ -86,16 +86,30 @@ def delete_line(line_id):
 
 @app.route('/clear-lines', methods=['POST'])
 def clear_lines():
-    session_id = request.cookies.get('session_id')
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    query = "DELETE FROM lines_table WHERE session_id=%s"
-    cursor.execute(query, (session_id,))
-    conn.commit()
+    data = request.json
+    session_id = data.get('session_id', 'default_session')
+    connection = create_connection()
+    cursor = connection.cursor()
+    cursor.execute("DELETE FROM lines_table WHERE session_id = %s", (session_id,))
+    cursor.execute("DELETE FROM forces_table WHERE session_id = %s", (session_id,))
+    connection.commit()
     cursor.close()
-    conn.close()
+    connection.close()
     return jsonify({'status': 'success'})
 
+@app.route('/save_force', methods=['POST'])
+def save_force():
+    data = request.json
+    connection = create_connection()
+    cursor = connection.cursor()
+    query = "INSERT INTO forces_table (session_id, line_id, fx, fy, x, y) VALUES (%s, %s, %s, %s, %s, %s)"
+    values = (data['session_id'], data['line_id'], data['fx'], data['fy'], data['x'], data['y'])
+    cursor.execute(query, values)
+    connection.commit()
+    cursor.close()
+    connection.close()
+    return jsonify({'status': 'success'})
+    
 @app.route('/get-lines', methods=['GET'])
 def get_lines():
     session_id = request.cookies.get('session_id')
