@@ -7,19 +7,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const addForceBtn = document.getElementById('addForce');
     let forces = [];
 
-    function getSessionID() {
-        return new Promise((resolve) => {
-            fetch('/get-session-id')
-                .then(response => response.json())
-                .then(data => resolve(data.session_id));
-        });
-    }
-
     async function loadForces() {
-        const sessionID = await getSessionID();
         const response = await fetch('/get-forces');
-        forces = await response.json();
-        updateForceLineSelect();
+        if (response.ok) {
+            forces = await response.json();
+            updateForceLineSelect();
+        } else {
+            console.error('Failed to load forces:', response.statusText);
+        }
     }
 
     function updateForceLineSelect() {
