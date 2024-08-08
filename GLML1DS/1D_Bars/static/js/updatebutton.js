@@ -62,6 +62,7 @@ function initForceButton() {
             checkDataUpToDate(() => {
                 // Your existing logic for adding a force goes here
                 console.log('Adding force...');
+                // Add the logic to interact with the force.js script here.
             });
         });
     }
