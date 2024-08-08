@@ -96,6 +96,21 @@ def clear_lines():
     conn.close()
     return jsonify({'status': 'success'})
 
+# Unified clear storage endpoint
+@app.route('/clear-storage', methods=['POST'])
+def clear_storage():
+    session_id = request.cookies.get('session_id')
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    # Delete data from lines_table, forces_table, and any other relevant tables
+    cursor.execute("DELETE FROM lines_table WHERE session_id=%s", (session_id,))
+    cursor.execute("DELETE FROM forces_table WHERE session_id=%s", (session_id,))
+    # Add additional tables as necessary
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return jsonify({'status': 'success'})
+
 @app.route('/get-lines', methods=['GET'])
 def get_lines():
     session_id = request.cookies.get('session_id')
