@@ -1,101 +1,270 @@
-from flask import Flask, request, jsonify, render_template, session
-import mysql.connector
-import os
-from flask_session import Session
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+let drawing = false;
+let translating = false;
+let translateStartX, translateStartY;
+let x1, y1, x2, y2;
+let lines = {};
+let scale = 1;
+let originX = canvas.width / 2;
+let originY = canvas.height / 2;
 
-app = Flask(__name__, static_folder='static')
-
-# Secret key for session management
-app.secret_key = os.urandom(24)
-
-# Session configuration
-app.config['SESSION_TYPE'] = 'filesystem'
-app.config['SESSION_PERMANENT'] = False
-app.config['SESSION_USE_SIGNER'] = True
-app.config['SESSION_KEY_PREFIX'] = 'session:'
-
-Session(app)
-
-# Database configuration
-db_config = {
-    'user': 'femsol',
-    'password': 'Dreamsneverdie21',
-    'host': 'database-1.c1c8ug44ytox.eu-north-1.rds.amazonaws.com',
-    'database': 'femsol_db'
+function getSessionID() {
+    const name = 'session_id=';
+    const decodedCookie = decodeURIComponent(document.cookie);
+    const ca = decodedCookie.split(';');
+    for (let i = 0; i < ca.length; i++) {
+        let c = ca[i];
+        while (c.charAt(0) == ' ') {
+            c = c.substring(1);
+        }
+        if (c.indexOf(name) == 0) {
+            return c.substring(name.length, c.length);
+        }
+    }
+    return "";
 }
 
-def get_db_connection():
-    conn = mysql.connector.connect(**db_config)
-    return conn
+const sessionID = getSessionID();
 
-@app.route('/')
-def index():
-    session['id'] = request.remote_addr
-    return render_template('1D_Bars.html')
+function resizeCanvas() {
+    canvas.width = canvas.parentElement.clientWidth;
+    canvas.height = canvas.parentElement.clientHeight;
+    originX = canvas.width / 2;
+    originY = canvas.height / 2;
+    draw();
+}
 
-@app.route('/results')
-def results():
-    return render_template('results.html')
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
 
-@app.route('/add-line', methods=['POST'])
-def add_line():
-    data = request.json
-    session_id = session.get('id', 'default_session')
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("INSERT INTO lines_table (x1, y1, x2, y2, session_id) VALUES (%s, %s, %s, %s, %s)", 
-                   (data['x1'], data['y1'], data['x2'], data['y2'], session_id))
-    conn.commit()
-    line_id = cursor.lastrowid
-    cursor.close()
-    conn.close()
-    return jsonify({'id': line_id})
+function drawGrid() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.strokeStyle = '#e0e0e0';
+    ctx.lineWidth = 1;
 
-@app.route('/update-line/<int:line_id>', methods=['PUT'])
-def update_line(line_id):
-    data = request.json
-    session_id = session.get('id', 'default_session')
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("UPDATE lines_table SET x1 = %s, y1 = %s, x2 = %s, y2 = %s WHERE id = %s AND session_id = %s",
-                   (data['x1'], data['y1'], data['x2'], data['y2'], line_id, session_id))
-    conn.commit()
-    cursor.close()
-    conn.close()
-    return jsonify({'status': 'success'})
+    for (let i = -originX; i < canvas.width - originX; i += 20 * scale) {
+        ctx.moveTo(originX + i, 0);
+        ctx.lineTo(originX + i, canvas.height);
+    }
 
-@app.route('/delete-line/<int:line_id>', methods=['DELETE'])
-def delete_line(line_id):
-    session_id = session.get('id', 'default_session')
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("DELETE FROM lines_table WHERE id = %s AND session_id = %s", (line_id, session_id))
-    conn.commit()
-    cursor.close()
-    conn.close()
-    return jsonify({'status': 'success'})
+    for (let i = -originY; i < canvas.height - originY; i += 20 * scale) {
+        ctx.moveTo(0, originY - i);
+        ctx.lineTo(canvas.width, originY - i);
+    }
 
-@app.route('/clear-lines', methods=['POST'])
-def clear_lines():
-    session_id = session.get('id', 'default_session')
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("DELETE FROM lines_table WHERE session_id = %s", (session_id,))
-    conn.commit()
-    cursor.close()
-    conn.close()
-    return jsonify({'status': 'success'})
+    ctx.stroke();
 
-@app.route('/get-lines', methods=['GET'])
-def get_lines():
-    session_id = session.get('id', 'default_session')
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT id, x1, y1, x2, y2 FROM lines_table WHERE session_id = %s", (session_id,))
-    lines = cursor.fetchall()
-    cursor.close()
-    conn.close()
-    return jsonify([{'id': line[0], 'x1': line[1], 'y1': line[2], 'x2': line[3], 'y2': line[4]} for line in lines])
+    // Draw origin lines
+    ctx.strokeStyle = 'blue';
+    ctx.beginPath();
+    ctx.moveTo(originX, 0);
+    ctx.lineTo(originX, canvas.height);
+    ctx.moveTo(0, originY);
+    ctx.lineTo(canvas.width, originY);
+    ctx.stroke();
+}
 
-if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=5000, debug=True)
+function drawLines() {
+    ctx.strokeStyle = 'black';
+    ctx.lineWidth = 2;
+
+    (lines[sessionID] || []).forEach(line => {
+        ctx.beginPath();
+        ctx.moveTo(originX + line.x1 * scale, originY - line.y1 * scale);
+        ctx.lineTo(originX + line.x2 * scale, originY - line.y2 * scale);
+        ctx.stroke();
+    });
+}
+
+function draw() {
+    drawGrid();
+    drawLines();
+}
+
+canvas.addEventListener('mousedown', (e) => {
+    if (translating && e.button === 0) {
+        translateStartX = e.offsetX;
+        translateStartY = e.offsetY;
+        canvas.addEventListener('mousemove', translateGrid);
+    } else if (!translating) {
+        drawing = true;
+        x1 = (e.offsetX - originX) / scale;
+        y1 = (originY - e.offsetX) / scale;
+    }
+});
+
+canvas.addEventListener('mousemove', (e) => {
+    if (drawing) {
+        x2 = (e.offsetX - originX) / scale;
+        y2 = (originY - e.offsetX) / scale;
+        draw();
+        ctx.strokeStyle = 'black';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(originX + x1 * scale, originY - y1 * scale);
+        ctx.lineTo(originX + x2 * scale, originY - y2 * scale);
+        ctx.stroke();
+    }
+});
+
+canvas.addEventListener('mouseup', async () => {
+    if (drawing) {
+        drawing = false;
+        const newLine = { x1, y1, x2, y2, session_id: sessionID };
+        if (!lines[sessionID]) {
+            lines[sessionID] = [];
+        }
+        lines[sessionID].push(newLine);
+
+        // Send line data to the server
+        try {
+            const response = await fetch('/add-line', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newLine)
+            });
+            const data = await response.json();
+            newLine.id = data.id;
+            updateLineSelect();
+            updateForceLineSelect();
+            updateDistributiveLineSelect();
+            updateBodyLineSelect();
+            updateThermalLineSelect();
+            updateMaterialLineSelect();
+        } catch (error) {
+            console.error('Error adding line:', error);
+        }
+    }
+    if (translating) {
+        canvas.removeEventListener('mousemove', translateGrid);
+        canvas.style.cursor = 'default';
+    }
+});
+
+function translateGrid(e) {
+    const dx = e.offsetX - translateStartX;
+    const dy = e.offsetY - translateStartY;
+    originX += dx;
+    originY += dy;
+    translateStartX = e.offsetX;
+    translateStartY = e.offsetY;
+    draw();
+}
+
+document.getElementById('clearStorage').addEventListener('click', async () => {
+    try {
+        await fetch('/clear-lines', { method: 'POST' });
+        lines[sessionID] = [];
+        draw();
+        updateLineSelect();
+        updateForceLineSelect();
+        updateDistributiveLineSelect();
+        updateBodyLineSelect();
+        updateThermalLineSelect();
+        updateMaterialLineSelect();
+    } catch (error) {
+        console.error('Error clearing lines:', error);
+    }
+});
+
+document.getElementById('translateGrid').addEventListener('click', () => {
+    translating = !translating;
+    if (translating) {
+        canvas.style.cursor = 'move';
+    } else {
+        canvas.style.cursor = 'default';
+    }
+});
+
+function updateLineSelect() {
+    const lineSelect = document.getElementById('lineSelect');
+    lineSelect.innerHTML = '<option value="">Select a line to highlight</option>';
+    (lines[sessionID] || []).forEach((line, index) => {
+        const option = document.createElement('option');
+        option.value = index;
+        option.textContent = `Line ${index + 1}`;
+        lineSelect.appendChild(option);
+    });
+}
+
+function updateForceLineSelect() {
+    const lineSelectForce = document.getElementById('lineSelectForce');
+    lineSelectForce.innerHTML = '<option value="">Select a line</option>';
+    (lines[sessionID] || []).forEach((line, index) => {
+        const option = document.createElement('option');
+        option.value = index;
+        option.textContent = `Line ${index + 1}`;
+        lineSelectForce.appendChild(option);
+    });
+}
+
+function updateDistributiveLineSelect() {
+    const lineSelectDistributive = document.getElementById('lineSelectDistributive');
+    lineSelectDistributive.innerHTML = '<option value="">Select a line</option>';
+    (lines[sessionID] || []).forEach((line, index) => {
+        const option = document.createElement('option');
+        option.value = index;
+        option.textContent = `Line ${index + 1}`;
+        lineSelectDistributive.appendChild(option);
+    });
+}
+
+function updateBodyLineSelect() {
+    const lineSelectBody = document.getElementById('lineSelectBody');
+    lineSelectBody.innerHTML = '<option value="">Select a line</option>';
+    (lines[sessionID] || []).forEach((line, index) => {
+        const option = document.createElement('option');
+        option.value = index;
+        option.textContent = `Line ${index + 1}`;
+        lineSelectBody.appendChild(option);
+    });
+}
+
+function updateThermalLineSelect() {
+    const lineSelectThermal = document.getElementById('lineSelectThermal');
+    lineSelectThermal.innerHTML = '<option value="">Select a line</option>';
+    (lines[sessionID] || []).forEach((line, index) => {
+        const option = document.createElement('option');
+        option.value = index;
+        option.textContent = `Line ${index + 1}`;
+        lineSelectThermal.appendChild(option);
+    });
+}
+
+function updateMaterialLineSelect() {
+    const lineSelectMaterial = document.getElementById('lineSelectMaterial');
+    lineSelectMaterial.innerHTML = '<option value="">Select a line</option>';
+    (lines[sessionID] || []).forEach((line, index) => {
+        const option = document.createElement('option');
+        option.value = index;
+        option.textContent = `Line ${index + 1}`;
+        lineSelectMaterial.appendChild(option);
+    });
+}
+
+async function loadLines() {
+    try {
+        const response = await fetch('/get-lines');
+        const data = await response.json();
+        lines = data.reduce((acc, line) => {
+            const { session_id } = line;
+            if (!acc[session_id]) {
+                acc[session_id] = [];
+            }
+            acc[session_id].push(line);
+            return acc;
+        }, {});
+        draw();
+        updateLineSelect();
+        updateForceLineSelect();
+        updateDistributiveLineSelect();
+        updateBodyLineSelect();
+        updateThermalLineSelect();
+        updateMaterialLineSelect();
+    } catch (error) {
+        console.error('Error loading lines:', error);
+    }
+}
+
+loadLines();
