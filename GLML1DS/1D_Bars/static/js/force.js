@@ -41,56 +41,59 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Function to add force to the selected line
-    addForceBtn.addEventListener('click', async () => {
-        const selectedIndex = lineSelectForce.value;
-        if (selectedIndex === "") {
-            alert("Please select a line.");
-            return;
+  addForceBtn.addEventListener('click', async () => {
+    const selectedIndex = lineSelectForce.value;
+    console.log('Selected index:', selectedIndex); // Log selected index
+    if (selectedIndex === "") {
+        alert("Please select a line.");
+        return;
+    }
+
+    const fx = parseFloat(fxInput.value);
+    const fy = parseFloat(fyInput.value);
+    const x = parseFloat(forceXInput.value);
+    const y = parseFloat(forceYInput.value);
+
+    if (isNaN(fx) || isNaN(fy) || isNaN(x) || isNaN(y)) {
+        alert("Please enter valid force and coordinate values.");
+        return;
+    }
+
+    const selectedLine = lines[selectedIndex];
+    console.log('Selected line:', selectedLine); // Log selected line to check validity
+
+    if (!selectedLine) {
+        alert("Selected line is not valid.");
+        return;
+    }
+
+    if (!isPointOnLine(selectedLine, x, y)) {
+        alert("The forces are out of the body.");
+        return;
+    }
+
+    const newForce = { session_id: sessionID, line_id: selectedLine.id, fx, fy, x, y };
+
+    fetch('/save_force', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(newForce)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            alert("Force added successfully.");
+        } else {
+            console.error('Failed to save force');
         }
-
-        const fx = parseFloat(fxInput.value);
-        const fy = parseFloat(fyInput.value);
-        const x = parseFloat(forceXInput.value);
-        const y = parseFloat(forceYInput.value);
-
-        if (isNaN(fx) || isNaN(fy) || isNaN(x) || isNaN(y)) {
-            alert("Please enter valid force and coordinate values.");
-            return;
-        }
-
-        const selectedLine = lines[selectedIndex];
-
-        if (!selectedLine) {
-            alert("Selected line is not valid.");
-            return;
-        }
-
-        if (!isPointOnLine(selectedLine, x, y)) {
-            alert("The forces are out of the body.");
-            return;
-        }
-
-        const newForce = { session_id: sessionID, line_id: selectedLine.id, fx, fy, x, y };
-
-        fetch('/save_force', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(newForce)
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
-                alert("Force added successfully.");
-            } else {
-                console.error('Failed to save force');
-            }
-        })
-        .catch((error) => {
-            console.error('Error:', error);
-        });
+    })
+    .catch((error) => {
+        console.error('Error:', error);
     });
+});
+
 
     // Function to clear storage
     document.getElementById('clearStorage').addEventListener('click', async () => {
