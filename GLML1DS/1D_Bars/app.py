@@ -116,12 +116,12 @@ def get_lines():
     session_id = request.cookies.get('session_id')
     conn = get_db_connection()
     cursor = conn.cursor()
-    query = "SELECT id, x1, y1, x2, y2 FROM lines_table WHERE session_id=%s"
+    query = "SELECT id, x1, y1, x2, y2, session_id FROM lines_table WHERE session_id=%s"
     cursor.execute(query, (session_id,))
     lines = cursor.fetchall()
     cursor.close()
     conn.close()
-    return jsonify([{'id': row[0], 'x1': row[1], 'y1': row[2], 'x2': row[3], 'y2': row[4]} for row in lines])
+    return jsonify([{'id': row[0], 'x1': row[1], 'y1': row[2], 'x2': row[3], 'y2': row[4], 'session_id': row[5]} for row in lines])
 
 # Force related endpoints
 @app.route('/save_force', methods=['POST'])
