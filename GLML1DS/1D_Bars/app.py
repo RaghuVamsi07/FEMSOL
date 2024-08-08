@@ -123,5 +123,20 @@ def get_lines():
     conn.close()
     return jsonify([{'id': row[0], 'x1': row[1], 'y1': row[2], 'x2': row[3], 'y2': row[4]} for row in lines])
 
+# Force related endpoints
+@app.route('/save_force', methods=['POST'])
+def save_force():
+    data = request.json
+    session_id = request.cookies.get('session_id')
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    query = "INSERT INTO forces_table (session_id, line_id, fx, fy, x, y) VALUES (%s, %s, %s, %s, %s, %s)"
+    values = (session_id, data['line_id'], data['fx'], data['fy'], data['x'], data['y'])
+    cursor.execute(query, values)
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return jsonify({'status': 'success'})
+
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000, debug=True)
