@@ -121,7 +121,10 @@ def get_lines():
     lines = cursor.fetchall()
     cursor.close()
     conn.close()
+    print(f"Session ID: {session_id}")  # Debugging line to see session ID
+    print(f"Fetched lines: {lines}")  # Debugging line to see fetched data
     return jsonify([{'id': row[0], 'x1': row[1], 'y1': row[2], 'x2': row[3], 'y2': row[4], 'session_id': row[5]} for row in lines])
+
 
 # Force related endpoints
 @app.route('/save_force', methods=['POST'])
