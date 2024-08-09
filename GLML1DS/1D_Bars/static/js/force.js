@@ -1,6 +1,18 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Other event listeners and logic...
+    let selectedLineData = {}; // This will store the fetched data for later use
 
+    // Event listener to update the selected line number when a line is selected
+    document.addEventListener('click', (event) => {
+        // Assuming that clicking a line somehow triggers a method that should set the line number.
+        // Replace this logic with whatever actually selects the line in your application
+        const lineElement = event.target.closest('.line-class'); // Change '.line-class' to the actual class or identifier of your lines
+        if (lineElement) {
+            window.selectedLineNumber = lineElement.getAttribute('data-line-number'); // Or however you're identifying your lines
+            console.log('Selected Line Number:', window.selectedLineNumber);
+        }
+    });
+
+    // Function to highlight and fetch data for the selected line
     async function highlightAndFetchLineData(lineNumber) {
         console.log('Fetching line data for line number:', lineNumber); // Log lineNumber for debugging
         try {
