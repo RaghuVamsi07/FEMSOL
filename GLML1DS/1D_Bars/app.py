@@ -175,13 +175,13 @@ def update_force_with_line_data():
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Assuming that forces_table has a corresponding line_id and you want to update the coordinates
+        # Update the forces_table with data from lines_table
         query = """
-            UPDATE forces_table
-            SET x1=%s, y1=%s, x2=%s, y2=%s
-            WHERE line_id=%s AND (x1 IS NULL OR y1 IS NULL OR x2 IS NULL OR y2 IS NULL)
+            INSERT INTO forces_table (line_id, x1, y1, x2, y2)
+            VALUES (%s, %s, %s, %s, %s)
+            ON DUPLICATE KEY UPDATE x1=VALUES(x1), y1=VALUES(y1), x2=VALUES(x2), y2=VALUES(y2)
         """
-        cursor.execute(query, (x1, y1, x2, y2, line_id))
+        cursor.execute(query, (line_id, x1, y1, x2, y2))
         conn.commit()
 
         cursor.close()
