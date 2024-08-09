@@ -1,7 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     const updateForceBtn = document.getElementById('updateForce');
 
-    // Function to fetch the selected line's data and update the forces_table
     updateForceBtn.addEventListener('click', async () => {
         const selectedLineId = document.getElementById('lineSelectForce').value;
         if (selectedLineId === "") {
@@ -10,7 +9,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            // Fetch the selected line's data from the server
             const response = await fetch(`/get-line/${selectedLineId}`);
             const selectedLine = await response.json();
 
@@ -19,14 +17,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // Send a request to update the forces_table with the line's data
-            await fetch(`/update-force-with-line-data`, {
+            const updateResponse = await fetch(`/update-force-with-line-data`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    line_id: selectedLine.id, // Use line id from selected line
+                    line_id: selectedLine.id,
                     x1: selectedLine.x1,
                     y1: selectedLine.y1,
                     x2: selectedLine.x2,
@@ -34,7 +31,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 })
             });
 
-            alert('Force data updated successfully.');
+            const result = await updateResponse.json();
+
+            if (result.status === "success") {
+                alert('Force data updated successfully.');
+            } else {
+                alert('Failed to update force data.');
+            }
         } catch (error) {
             console.error('Error updating force data:', error);
             alert('Failed to update force data.');
