@@ -108,5 +108,30 @@ def get_lines():
     conn.close()
     return jsonify([{'id': row[0], 'x1': row[1], 'y1': row[2], 'x2': row[3], 'y2': row[4]} for row in lines])
 
+@app.route('/get-line-by-number/<int:line_number>', methods=['GET'])
+def get_line_by_number(line_number):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    # Replace this query with your actual logic for fetching the line
+    query = "SELECT id, x1, y1, x2, y2, session_id FROM lines_table WHERE id = %s"
+    cursor.execute(query, (line_number,))
+    line = cursor.fetchone()
+    cursor.close()
+    conn.close()
+
+    if line:
+        return jsonify({
+            'id': line[0],
+            'x1': line[1],
+            'y1': line[2],
+            'x2': line[3],
+            'y2': line[4],
+            'session_id': line[5]
+        })
+    else:
+        return jsonify({'error': 'Line not found'}), 404
+
+
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000, debug=True)
