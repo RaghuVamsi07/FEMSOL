@@ -116,8 +116,9 @@ def update_row_numbers():
     cursor.execute("""
         UPDATE lines_table 
         SET row_num = (@row_number := @row_number + 1)
+        WHERE session_id = %s
         ORDER BY id;
-    """)
+    """, (session['id'],))
     conn.commit()
     cursor.close()
     conn.close()
