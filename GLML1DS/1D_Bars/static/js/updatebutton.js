@@ -11,13 +11,6 @@ function initButtons() {
     }
 
     // Add more button initializations here as needed in the future
-    // Example: 
-    // const anotherButton = document.getElementById('anotherButton');
-    // if (anotherButton) {
-    //     anotherButton.addEventListener('click', function() {
-    //         someOtherFunction();
-    //     });
-    // }
 }
 
 function fetchLatestData() {
@@ -38,7 +31,7 @@ function updateLinesSection(data) {
     lineSelect.innerHTML = '<option value="">Select a line to highlight</option>'; // Reset dropdown
     data.forEach((line, index) => {
         const option = document.createElement('option');
-        option.value = index;
+        option.value = line.id;  // Use line ID directly
         option.textContent = `Line ${index + 1}`;
         lineSelect.appendChild(option);
     });
@@ -60,9 +53,7 @@ function initForceButton() {
     if (addForceButton) {
         addForceButton.addEventListener('click', function() {
             checkDataUpToDate(() => {
-                // Your existing logic for adding a force goes here
                 console.log('Adding force...');
-                // Add the logic to interact with the force.js script here.
             });
         });
     }
