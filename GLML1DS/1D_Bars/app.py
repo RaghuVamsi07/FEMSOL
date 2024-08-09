@@ -132,35 +132,6 @@ def get_line(line_id):
     conn.close()
     return jsonify(line_data)
 
-@app.route('/add-force', methods=['POST'])
-def add_force():
-    try:
-        data = request.get_json()  # Safely get JSON data
-        line_id = data.get('line_id')
-        x1 = data.get('x1')
-        y1 = data.get('y1')
-        x2 = data.get('x2')
-        y2 = data.get('y2')
-        fx = data.get('fx')
-        fy = data.get('fy')
-        x = data.get('x')
-        y = data.get('y')
-
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        query = """
-            INSERT INTO forces_table (line_id, x1, y1, x2, y2, fx, fy, x, y)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-        """
-        cursor.execute(query, (line_id, x1, y1, x2, y2, fx, fy, x, y))
-        conn.commit()
-        cursor.close()
-        conn.close()
-
-        return jsonify({"status": "success"})
-    except Exception as e:
-        print("Error:", str(e))  # Log the error on the server for debugging
-        return jsonify({"status": "error", "message": str(e)}), 500
 
 @app.route('/update-force-with-line-data', methods=['POST'])
 def update_force_with_line_data():
@@ -192,6 +163,38 @@ def update_force_with_line_data():
         print("Error:", str(e))  # Log the error on the server for debugging
         return jsonify({"status": "error", "message": str(e)}), 500
 
+@app.route('/store-force-data', methods=['POST'])
+def store_force_data():
+    try:
+        data = request.get_json()
+        line_id = data.get('line_id')
+        session_id = data.get('session_id')
+        x1 = data.get('x1')
+        y1 = data.get('y1')
+        x2 = data.get('x2')
+        y2 = data.get('y2')
+        fx = data.get('fx')
+        fy = data.get('fy')
+        x = data.get('x')
+        y = data.get('y')
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        query = """
+            INSERT INTO forces_table (line_id, session_id, x1, y1, x2, y2, fx, fy, x, y)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """
+        cursor.execute(query, (line_id, session_id, x1, y1, x2, y2, fx, fy, x, y))
+        conn.commit()
+
+        cursor.close()
+        conn.close()
+
+        return jsonify({"status": "success"})
+    except Exception as e:
+        print("Error:", str(e))  # Log the error on the server for debugging
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000, debug=True)
