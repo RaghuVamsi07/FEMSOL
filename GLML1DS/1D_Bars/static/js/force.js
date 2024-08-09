@@ -1,23 +1,5 @@
-document.addEventListener('DOMContentLoaded', async () => {
-    let lines = [];
+document.addEventListener('DOMContentLoaded', () => {
     let selectedLineData = {}; // This will store the fetched data for later use
-    const sessionID = getCookie('session_id');
-
-    // Function to fetch lines from the backend
-    async function fetchLines() {
-        try {
-            const response = await fetch('/get-lines', { cache: 'no-cache' });
-            const data = await response.json();
-            console.log('Fetched data:', data);
-            if (Array.isArray(data) && data.length > 0) {
-                lines = data;
-            } else {
-                console.error('No lines fetched or invalid data format:', data);
-            }
-        } catch (error) {
-            console.error('Error fetching lines:', error);
-        }
-    }
 
     // Function to highlight and fetch data for the selected line
     async function highlightAndFetchLineData(lineNumber) {
@@ -53,26 +35,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // Example function to handle highlighting (to be replaced with your actual implementation)
+    // Function to handle highlighting (to be replaced with your actual implementation)
     function highlightLineOnCanvas(lineData) {
         console.log("Highlighting line on canvas:", lineData);
         // Implement your canvas highlighting logic here
     }
 
-    // Load initial data
-    await fetchLines();
-
-    // Example of how to call the highlightAndFetchLineData function
-    // Assuming you have a way to know which line is selected (e.g., a click event)
-    document.getElementById('canvas').addEventListener('click', () => {
-        const selectedLineNumber = 2; // Replace with actual logic to determine selected line number
+    // Event listener for the Fetch button
+    document.getElementById('fetchLineData').addEventListener('click', () => {
+        // Assuming the selected line number is determined by some other method, such as a previous user action
+        const selectedLineNumber = window.selectedLineNumber; // Example: you set this globally on line selection
+        if (!selectedLineNumber) {
+            alert("Please select a line first.");
+            return;
+        }
         highlightAndFetchLineData(selectedLineNumber);
     });
-
-    // Function to get a cookie by name
-    function getCookie(name) {
-        const value = `; ${document.cookie}`;
-        const parts = value.split(`; ${name}=`);
-        if (parts.length === 2) return parts.pop().split(';').shift();
-    }
 });
