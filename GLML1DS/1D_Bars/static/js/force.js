@@ -6,14 +6,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     const forceYInput = document.getElementById('forceY');
     const addForceBtn = document.getElementById('addForce');
     let lines = [];
-    const sessionID = getCookie('session_id'); // Retrieve session ID from cookies
+    let lineMapping = {};  // This will map dropdown indices to line IDs
+    const sessionID = getCookie('session_id');
 
     // Function to fetch lines from the backend
     async function fetchLines() {
         try {
-            const response = await fetch('/get-lines', { cache: 'no-cache' }); // Disable cache
+            const response = await fetch('/get-lines', { cache: 'no-cache' });
             const data = await response.json();
-            console.log('Fetched data:', data); // Log fetched data to check contents
+            console.log('Fetched data:', data);
             if (Array.isArray(data) && data.length > 0) {
                 lines = data;
                 updateForceLineSelect();
@@ -21,7 +22,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 console.error('No lines fetched or invalid data format:', data);
             }
         } catch (error) {
-            console.error('Error fetching lines:', error); // Log any errors during fetching
+            console.error('Error fetching lines:', error);
         }
     }
 
@@ -30,9 +31,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         lineSelectForce.innerHTML = '<option value="">Select a line</option>';
         lines.forEach((line, index) => {
             const option = document.createElement('option');
-            option.value = index;
+            option.value = line.id;  // Use line ID directly
             option.textContent = `Line ${index + 1}`;
             lineSelectForce.appendChild(option);
+            lineMapping[index] = line.id;  // Map index to line ID
         });
     }
 
@@ -51,9 +53,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Function to add force to the selected line
     addForceBtn.addEventListener('click', async () => {
-        const selectedIndex = lineSelectForce.value;
-        console.log('Selected index:', selectedIndex); // Log selected index
-        if (selectedIndex === "") {
+        const selectedLineID = lineSelectForce.value;
+        console.log('Selected Line ID:', selectedLineID);  // Log selected line ID
+
+        if (selectedLineID === "") {
             alert("Please select a line.");
             return;
         }
@@ -68,8 +71,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
-        const selectedLine = lines[selectedIndex];
-        console.log('Selected line:', selectedLine); // Log selected line to check validity
+        const selectedLine = lines.find(line => line.id == selectedLineID);
+        console.log('Selected line:', selectedLine);  // Log selected line to check validity
 
         if (!selectedLine) {
             alert("Selected line is not valid.");
@@ -81,7 +84,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
-        const newForce = { session_id: sessionID, line_id: selectedLine.id, fx, fy, x, y };
+        const newForce = { session_id: sessionID, line_id: selectedLineID, fx, fy, x, y };
 
         fetch('/save_force', {
             method: 'POST',
@@ -94,7 +97,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         .then(data => {
             if (data.status === 'success') {
                 alert("Force added successfully.");
-                fetchLines(); // Fetch lines immediately after adding force
+                fetchLines();  // Fetch lines immediately after adding force
             } else {
                 console.error('Failed to save force');
             }
