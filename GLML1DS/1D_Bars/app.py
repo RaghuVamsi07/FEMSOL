@@ -48,29 +48,32 @@ def add_line():
     session_id = request.cookies.get('session_id')
     conn = get_db_connection()
     cursor = conn.cursor()
-    query = "INSERT INTO lines_table (x1, y1, x2, y2, session_id) VALUES (%s, %s, %s, %s, %s)"
-    values = (data['x1'], data['y1'], data['x2'], data['y2'], session_id)
+
+    # Determine the current max line_id for this session
+    cursor.execute("SELECT MAX(line_id) FROM lines_table WHERE session_id = %s", (session_id,))
+    max_line_id = cursor.fetchone()[0]
+    if max_line_id is None:
+        max_line_id = 0
+    
+    new_line_id = max_line_id + 1
+
+    # Insert the new line with the new line_id
+    query = "INSERT INTO lines_table (line_id, x1, y1, x2, y2, session_id) VALUES (%s, %s, %s, %s, %s, %s)"
+    values = (new_line_id, data['x1'], data['y1'], data['x2'], data['y2'], session_id)
     cursor.execute(query, values)
     conn.commit()
-    line_id = cursor.lastrowid
     cursor.close()
     conn.close()
-    return jsonify({'id': line_id})
+    return jsonify({'line_id': new_line_id})
 
-@app.route('/update-line', methods=['POST'])
-def update_line():
+@app.route('/update-line/<int:line_id>', methods=['PUT'])
+def update_line(line_id):
     data = request.json
-    line_id = data.get('line_id')
-    x1 = data.get('x1')
-    y1 = data.get('y1')
-    x2 = data.get('x2')
-    y2 = data.get('y2')
     session_id = request.cookies.get('session_id')
-    
     conn = get_db_connection()
     cursor = conn.cursor()
-    query = "UPDATE lines_table SET x1=%s, y1=%s, x2=%s, y2=%s WHERE id=%s AND session_id=%s"
-    values = (x1, y1, x2, y2, line_id, session_id)
+    query = "UPDATE lines_table SET x1=%s, y1=%s, x2=%s, y2=%s WHERE line_id=%s AND session_id=%s"
+    values = (data['x1'], data['y1'], data['x2'], data['y2'], line_id, session_id)
     cursor.execute(query, values)
     conn.commit()
     cursor.close()
@@ -82,7 +85,7 @@ def delete_line(line_id):
     session_id = request.cookies.get('session_id')
     conn = get_db_connection()
     cursor = conn.cursor()
-    query = "DELETE FROM lines_table WHERE id=%s AND session_id=%s"
+    query = "DELETE FROM lines_table WHERE line_id=%s AND session_id=%s"
     values = (line_id, session_id)
     cursor.execute(query, values)
     conn.commit()
@@ -107,18 +110,12 @@ def get_lines():
     session_id = request.cookies.get('session_id')
     conn = get_db_connection()
     cursor = conn.cursor()
-    query = "SELECT id, x1, y1, x2, y2 FROM lines_table WHERE session_id=%s"
+    query = "SELECT line_id, x1, y1, x2, y2 FROM lines_table WHERE session_id=%s"
     cursor.execute(query, (session_id,))
     lines = cursor.fetchall()
     cursor.close()
     conn.close()
-    return jsonify([{'id': row[0], 'x1': row[1], 'y1': row[2], 'x2': row[3], 'y2': row[4]} for row in lines])
-
-@app.route('/set-session', methods=['POST'])
-def set_session():
-    data = request.get_json()
-    session['session_id'] = data.get('session_id')
-    return jsonify({'status': 'session set'})
+    return jsonify([{'line_id': row[0], 'x1': row[1], 'y1': row[2], 'x2': row[3], 'y2': row[4]} for row in lines])
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000, debug=True)
