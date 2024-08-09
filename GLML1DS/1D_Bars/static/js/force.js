@@ -1,48 +1,44 @@
-document.addEventListener('DOMContentLoaded', async () => {
+document.addEventListener('DOMContentLoaded', () => {
     const lineSelectForce = document.getElementById('lineSelectForce');
     const fxInput = document.getElementById('fx');
     const fyInput = document.getElementById('fy');
     const forceXInput = document.getElementById('forceX');
     const forceYInput = document.getElementById('forceY');
     const addForceBtn = document.getElementById('addForce');
-    let lines = [];
-    const sessionID = getCookie('session_id'); // Retrieve session ID from cookies
 
-    // Function to fetch lines from the backend
-    async function fetchLines() {
+    // Function to populate the line selection dropdown with data fetched from the server
+    async function updateForceLineSelect() {
         try {
-            const response = await fetch('/get-lines', { cache: 'no-cache' }); // Disable cache
-            const data = await response.json();
-            console.log('Fetched lines:', data); // Log fetched data to check contents
-            if (Array.isArray(data) && data.length > 0) {
-                lines = data;
-                updateForceLineSelect();
-            } else {
-                console.error('No lines fetched or invalid data format:', data);
-            }
+            const response = await fetch('/get-all-lines'); // Fetch all lines from the server
+            const lines = await response.json();
+            lineSelectForce.innerHTML = '<option value="">Select a line</option>';
+            lines.forEach((line, index) => {
+                const option = document.createElement('option');
+                option.value = line.id; // Use the line's id as the value
+                option.textContent = `Line ${index + 1} (ID: ${line.id})`;
+                lineSelectForce.appendChild(option);
+            });
         } catch (error) {
-            console.error('Error fetching lines:', error); // Log any errors during fetching
+            console.error('Error fetching lines:', error);
         }
     }
 
-    // Function to populate the line selection dropdown
-    function updateForceLineSelect() {
-        lineSelectForce.innerHTML = '<option value="">Select a line</option>';
-        lines.forEach((line, index) => {
-            const option = document.createElement('option');
-            option.value = line.id;  // Set the option value to line.id instead of index
-            option.textContent = `Line ${index + 1}`;
-            lineSelectForce.appendChild(option);
-        });
-    }
-
     // Load initial data and populate dropdown
-    await fetchLines();
+    updateForceLineSelect();
+
+    // Function to check if the point is on the line
+    function isPointOnLine(line, x, y) {
+        const { x1, y1, x2, y2 } = line;
+        const distance = Math.abs((y2 - y1) * x - (x2 - x1) * y + x2 * y1 - y2 * x1) / Math.sqrt((y2 - y1) ** 2 + (x2 - x1) ** 2);
+        const lineLength = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
+        const pointToStart = Math.sqrt((x - x1) ** 2 + (y - y1) ** 2);
+        const pointToEnd = Math.sqrt((x - x2) ** 2 + (y - y2) ** 2);
+        return (distance < 1e-5 && pointToStart <= lineLength && pointToEnd <= lineLength);
+    }
 
     // Function to add force to the selected line
     addForceBtn.addEventListener('click', async () => {
-        const selectedLineId = lineSelectForce.value; // Get the selected line_id
-        console.log('Selected Line ID:', selectedLineId); // Log selected line_id
+        const selectedLineId = lineSelectForce.value;
         if (selectedLineId === "") {
             alert("Please select a line.");
             return;
@@ -58,62 +54,39 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
-        const selectedLine = lines.find(line => line.id === parseInt(selectedLineId)); // Find the selected line
-        console.log('Selected line:', selectedLine); // Log selected line to check validity
-
-        if (!selectedLine) {
-            alert("Selected line is not valid.");
-            return;
-        }
-
-        const newForce = { session_id: sessionID, line_id: selectedLine.id, fx, fy, x, y };
-
-        fetch('/save_force', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(newForce)
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
-                alert("Force added successfully.");
-                fetchLines(); // Fetch lines immediately after adding force
-            } else {
-                console.error('Failed to save force');
-            }
-        })
-        .catch((error) => {
-            console.error('Error:', error);
-        });
-    });
-
-    // Function to clear storage
-    document.getElementById('clearStorage').addEventListener('click', async () => {
         try {
-            const response = await fetch('/clear-storage', {
+            // Fetch the selected line's data from the server
+            const response = await fetch(`/get-line/${selectedLineId}`);
+            const selectedLine = await response.json();
+
+            if (!isPointOnLine(selectedLine, x, y)) {
+                alert("The forces are out of the body.");
+                return;
+            }
+
+            // Insert the data into forces_table
+            await fetch(`/add-force`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
-                }
+                },
+                body: JSON.stringify({
+                    line_id: selectedLine.id, // Use line id from selected line
+                    x1: selectedLine.x1,
+                    y1: selectedLine.y1,
+                    x2: selectedLine.x2,
+                    y2: selectedLine.y2,
+                    fx: fx,
+                    fy: fy,
+                    x: x,
+                    y: y
+                })
             });
-            const result = await response.json();
-            if (result.status === 'success') {
-                lines = [];
-                updateForceLineSelect();
-            } else {
-                console.error('Failed to clear storage');
-            }
+
+            alert('Force added successfully.');
         } catch (error) {
-            console.error('Error clearing storage:', error);
+            console.error('Error adding force data:', error);
+            alert('Failed to add force data to the database.');
         }
     });
-
-    // Function to get a cookie by name
-    function getCookie(name) {
-        const value = `; ${document.cookie}`;
-        const parts = value.split(`; ${name}=`);
-        if (parts.length === 2) return parts.pop().split(';').shift();
-    }
 });
