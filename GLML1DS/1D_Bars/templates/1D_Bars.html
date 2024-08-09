@@ -33,18 +33,16 @@
                 <select id="lineSelectForce">
                     <option value="">Select a line</option>
                 </select>
-                <div id="forcesSection">
-    
+
+
                 <button id="fetchLineData">Fetch Line Data</button>
-                       <!-- Fetch button remains -->
+
                 <label>ID: <input type="text" id="displayID" readonly /></label>
                 <label>Session ID: <input type="text" id="displaySessionID" readonly /></label>
                 <label>X1: <input type="text" id="displayX1" readonly /></label>
                 <label>Y1: <input type="text" id="displayY1" readonly /></label>
                 <label>X2: <input type="text" id="displayX2" readonly /></label>
                 <label>Y2: <input type="text" id="displayY2" readonly /></label>
-                </div>
-
 
                 
                 <label for="fx">F<sub>x</sub>:</label>
@@ -137,6 +135,8 @@
     <script src="{{ url_for('static', filename='js/material_analysis.js') }}"></script>
     <script src="{{ url_for('static', filename='js/workspace.js') }}"></script>
     <script src="{{ url_for('static', filename='js/common.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/lineData.js') }}"></script>
+
 <script>
         function startAnalysis() {
             window.open('/results', '_blank');
