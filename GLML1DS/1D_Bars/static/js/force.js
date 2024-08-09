@@ -14,14 +14,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            // Fetch the selected line's data from the server
+            console.log("Fetching line data for ID:", selectedLineId);
             const response = await fetch(`/get-line/${selectedLineId}`);
             const selectedLine = await response.json();
 
-            if (!selectedLine) {
-                alert("Failed to fetch line data.");
+            if (response.status !== 200 || !selectedLine || !selectedLine.x1 || !selectedLine.y1 || !selectedLine.x2 || !selectedLine.y2) {
+                console.error("Line data not found or incomplete:", selectedLine);
+                alert("Failed to fetch line data or line data is incomplete.");
                 return;
             }
+
+            console.log("Line data received:", selectedLine);
 
             const fx = parseFloat(fxInput.value);
             const fy = parseFloat(fyInput.value);
@@ -74,9 +77,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Function to check if the point (x, y) is on the line segment
     function isPointOnLine(line, x, y) {
-        const x1 = line.x1, y1 = line.y1, x2 = line.x2, y2 = line.y2;
+        const { x1, y1, x2, y2 } = line;
         const distance = Math.abs((y2 - y1) * x - (x2 - x1) * y + x2 * y1 - y2 * x1) / Math.sqrt((y2 - y1) ** 2 + (x2 - x1) ** 2);
         const lineLength = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
         const pointToStart = Math.sqrt((x - x1) ** 2 + (y - y1) ** 2);
