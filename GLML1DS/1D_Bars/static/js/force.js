@@ -6,7 +6,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const forceYInput = document.getElementById('forceY');
     const addForceBtn = document.getElementById('addForce');
     let lines = [];
-    let lineMapping = {};  // This will map dropdown indices to line IDs
     const sessionID = getCookie('session_id');
 
     // Function to fetch lines from the backend
@@ -31,17 +30,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         lineSelectForce.innerHTML = '<option value="">Select a line</option>';
         lines.forEach((line, index) => {
             const option = document.createElement('option');
-            option.value = line.id;  // Use line ID directly
+            option.value = line.id; // Set option value to line_id
             option.textContent = `Line ${index + 1}`;
             lineSelectForce.appendChild(option);
-            lineMapping[index] = line.id;  // Map index to line ID
         });
     }
 
     // Load initial data and populate dropdown
     await fetchLines();
 
-    // Function to check if the point is on the line
+     // Function to check if the point is on the line
     function isPointOnLine(line, x, y) {
         const x1 = line.x1, y1 = line.y1, x2 = line.x2, y2 = line.y2;
         const distance = Math.abs((y2 - y1) * x - (x2 - x1) * y + x2 * y1 - y2 * x1) / Math.sqrt((y2 - y1) ** 2 + (x2 - x1) ** 2);
@@ -53,10 +51,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Function to add force to the selected line
     addForceBtn.addEventListener('click', async () => {
-        const selectedLineID = lineSelectForce.value;
-        console.log('Selected Line ID:', selectedLineID);  // Log selected line ID
+        const line_id = lineSelectForce.value;
+        console.log('Selected Line ID:', line_id);
 
-        if (selectedLineID === "") {
+        if (!line_id) {
             alert("Please select a line.");
             return;
         }
@@ -71,8 +69,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
-        const selectedLine = lines.find(line => line.id == selectedLineID);
-        console.log('Selected line:', selectedLine);  // Log selected line to check validity
+        const selectedLine = lines.find(line => line.id === parseInt(line_id));
+        console.log('Selected line:', selectedLine);
 
         if (!selectedLine) {
             alert("Selected line is not valid.");
@@ -84,7 +82,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
-        const newForce = { session_id: sessionID, line_id: selectedLineID, fx, fy, x, y };
+        const newForce = { session_id: sessionID, line_id: selectedLine.id, fx, fy, x, y };
 
         fetch('/save_force', {
             method: 'POST',
@@ -97,18 +95,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         .then(data => {
             if (data.status === 'success') {
                 alert("Force added successfully.");
-                fetchLines();  // Fetch lines immediately after adding force
+                fetchLines(); // Fetch lines immediately after adding force
             } else {
-                console.error('Failed to save force');
+                alert(data.message || 'Failed to save force');
             }
         })
         .catch((error) => {
             console.error('Error:', error);
         });
     });
-
-    // Function to clear storage
-    document.getElementById('clearStorage').addEventListener('click', async () => {
+     document.getElementById('clearStorage').addEventListener('click', async () => {
         try {
             const response = await fetch('/clear-storage', {
                 method: 'POST',
