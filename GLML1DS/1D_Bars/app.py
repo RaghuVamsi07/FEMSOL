@@ -133,13 +133,29 @@ def save_force():
     session_id = request.cookies.get('session_id')
     conn = get_db_connection()
     cursor = conn.cursor()
-    query = "INSERT INTO forces_table (session_id, line_id, fx, fy, x, y) VALUES (%s, %s, %s, %s, %s, %s)"
-    values = (session_id, data['line_id'], data['fx'], data['fy'], data['x'], data['y'])
+
+    # Extract line_id from the request data
+    line_id = data.get('line_id')
+
+    # Check if line_id exists in the lines_table
+    cursor.execute("SELECT id FROM lines_table WHERE id=%s AND session_id=%s", (line_id, session_id))
+    line = cursor.fetchone()
+
+    if not line:
+        cursor.close()
+        conn.close()
+        return jsonify({'status': 'error', 'message': 'Selected line is not valid.'})
+
+    # Insert force data into the forces_table
+    query = "INSERT INTO forces_table (line_id, fx, fy, x, y, session_id) VALUES (%s, %s, %s, %s, %s, %s)"
+    values = (line_id, data['fx'], data['fy'], data['x'], data['y'], session_id)
     cursor.execute(query, values)
     conn.commit()
     cursor.close()
     conn.close()
+    
     return jsonify({'status': 'success'})
+
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000, debug=True)
