@@ -112,8 +112,6 @@ def get_lines():
 def get_line_by_number(line_number):
     conn = get_db_connection()
     cursor = conn.cursor()
-    
-    # Replace this query with your actual logic for fetching the line
     query = "SELECT id, x1, y1, x2, y2, session_id FROM lines_table WHERE id = %s"
     cursor.execute(query, (line_number,))
     line = cursor.fetchone()
@@ -131,7 +129,6 @@ def get_line_by_number(line_number):
         })
     else:
         return jsonify({'error': 'Line not found'}), 404
-
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000, debug=True)
