@@ -106,17 +106,6 @@ def get_db_connection():
         cursorclass=pymysql.cursors.DictCursor
     )
 
-# Route to get all lines
-@app.route('/get-all-lines', methods=['GET'])
-def get_all_lines():
-    conn = get_db_connection()
-    with conn.cursor() as cursor:
-        sql = "SELECT * FROM lines_table"
-        cursor.execute(sql)
-        lines = cursor.fetchall()
-    conn.close()
-    return jsonify(lines)
-
 # Route to get a specific line by ID
 @app.route('/get-line/<int:line_id>', methods=['GET'])
 def get_line(line_id):
@@ -127,6 +116,18 @@ def get_line(line_id):
         line_data = cursor.fetchone()
     conn.close()
     return jsonify(line_data)
+
+@app.route('/get-lines', methods=['GET'])
+def get_lines():
+    session_id = request.cookies.get('session_id')
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    query = "SELECT id, x1, y1, x2, y2 FROM lines_table WHERE session_id=%s"
+    cursor.execute(query, (session_id,))
+    lines = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return jsonify([{'id': row[0], 'x1': row[1], 'y1': row[2], 'x2': row[3], 'y2': row[4]} for row in lines])
 
 # Route to add a new force to the forces_table
 @app.route('/add-force', methods=['POST'])
