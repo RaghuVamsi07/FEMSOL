@@ -29,24 +29,6 @@ def get_db_connection():
     conn = mysql.connector.connect(**db_config)
     return conn
 
-def update_row_numbers():
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    
-    # Reset the row numbers
-    cursor.execute("SET @row_number = 0;")
-    
-    # Update the row_num column based on id
-    cursor.execute("""
-        UPDATE lines_table 
-        SET row_num = (@row_number := @row_number + 1) 
-        ORDER BY id;
-    """)
-    
-    conn.commit()
-    cursor.close()
-    conn.close()
-
 @app.route('/')
 def index():
     if 'session_id' not in request.cookies:
@@ -70,13 +52,10 @@ def add_line():
     values = (data['x1'], data['y1'], data['x2'], data['y2'], session_id)
     cursor.execute(query, values)
     conn.commit()
+    line_id = cursor.lastrowid
     cursor.close()
     conn.close()
-
-    # Update row numbers after inserting the new line
-    update_row_numbers()
-
-    return jsonify({'status': 'success'})
+    return jsonify({'id': line_id})
 
 @app.route('/update-line/<int:line_id>', methods=['PUT'])
 def update_line(line_id):
@@ -103,10 +82,6 @@ def delete_line(line_id):
     conn.commit()
     cursor.close()
     conn.close()
-
-    # Update row numbers after deleting the line
-    update_row_numbers()
-
     return jsonify({'status': 'success'})
 
 @app.route('/clear-lines', methods=['POST'])
