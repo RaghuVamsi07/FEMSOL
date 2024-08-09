@@ -108,6 +108,5 @@ def get_lines():
     conn.close()
     return jsonify([{'id': row[0], 'x1': row[1], 'y1': row[2], 'x2': row[3], 'y2': row[4]} for row in lines])
 
-
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000, debug=True)
