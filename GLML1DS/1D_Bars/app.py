@@ -108,5 +108,21 @@ def get_lines():
     conn.close()
     return jsonify([{'id': row[0], 'x1': row[1], 'y1': row[2], 'x2': row[3], 'y2': row[4]} for row in lines])
 
+@app.route('/update-row-numbers', methods=['POST'])
+def update_row_numbers():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SET @row_number = 0;")
+    cursor.execute("""
+        UPDATE lines_table 
+        SET row_num = (@row_number := @row_number + 1)
+        ORDER BY id;
+    """)
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return jsonify({'status': 'success'})
+
+
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000, debug=True)
