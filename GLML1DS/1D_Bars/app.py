@@ -52,20 +52,25 @@ def add_line():
     values = (data['x1'], data['y1'], data['x2'], data['y2'], session_id)
     cursor.execute(query, values)
     conn.commit()
-    line_id = cursor.lastrowid  # Fetch the last inserted line's ID
+    line_id = cursor.lastrowid
     cursor.close()
     conn.close()
-    return jsonify({'line_id': line_id})  # Return the line_id to the frontend
+    return jsonify({'id': line_id})
 
-
-@app.route('/update-line/<int:line_id>', methods=['PUT'])
-def update_line(line_id):
+@app.route('/update-line', methods=['POST'])
+def update_line():
     data = request.json
+    line_id = data.get('line_id')
+    x1 = data.get('x1')
+    y1 = data.get('y1')
+    x2 = data.get('x2')
+    y2 = data.get('y2')
     session_id = request.cookies.get('session_id')
+    
     conn = get_db_connection()
     cursor = conn.cursor()
     query = "UPDATE lines_table SET x1=%s, y1=%s, x2=%s, y2=%s WHERE id=%s AND session_id=%s"
-    values = (data['x1'], data['y1'], data['x2'], data['y2'], line_id, session_id)
+    values = (x1, y1, x2, y2, line_id, session_id)
     cursor.execute(query, values)
     conn.commit()
     cursor.close()
@@ -97,21 +102,6 @@ def clear_lines():
     conn.close()
     return jsonify({'status': 'success'})
 
-# Unified clear storage endpoint
-@app.route('/clear-storage', methods=['POST'])
-def clear_storage():
-    session_id = request.cookies.get('session_id')
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    # Delete data from lines_table, forces_table, and any other relevant tables
-    cursor.execute("DELETE FROM lines_table WHERE session_id=%s", (session_id,))
-    cursor.execute("DELETE FROM forces_table WHERE session_id=%s", (session_id,))
-    # Add additional tables as necessary
-    conn.commit()
-    cursor.close()
-    conn.close()
-    return jsonify({'status': 'success'})
-
 @app.route('/get-lines', methods=['GET'])
 def get_lines():
     session_id = request.cookies.get('session_id')
@@ -124,36 +114,11 @@ def get_lines():
     conn.close()
     return jsonify([{'id': row[0], 'x1': row[1], 'y1': row[2], 'x2': row[3], 'y2': row[4]} for row in lines])
 
-# Force related endpoints
-@app.route('/save_force', methods=['POST'])
-def save_force():
-    data = request.json
-    session_id = request.cookies.get('session_id')
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    # Extract line_id from the request data
-    line_id = data.get('line_id')
-
-    # Check if line_id exists in the lines_table
-    cursor.execute("SELECT id FROM lines_table WHERE id=%s AND session_id=%s", (line_id, session_id))
-    line = cursor.fetchone()
-
-    if not line:
-        cursor.close()
-        conn.close()
-        return jsonify({'status': 'error', 'message': 'Selected line is not valid.'})
-
-    # Insert force data into the forces_table
-    query = "INSERT INTO forces_table (line_id, fx, fy, x, y, session_id) VALUES (%s, %s, %s, %s, %s, %s)"
-    values = (line_id, data['fx'], data['fy'], data['x'], data['y'], session_id)
-    cursor.execute(query, values)
-    conn.commit()
-    cursor.close()
-    conn.close()
-    
-    return jsonify({'status': 'success'})
-
+@app.route('/set-session', methods=['POST'])
+def set_session():
+    data = request.get_json()
+    session['session_id'] = data.get('session_id')
+    return jsonify({'status': 'session set'})
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000, debug=True)
