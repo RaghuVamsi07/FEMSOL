@@ -96,33 +96,63 @@ def clear_lines():
     conn.close()
     return jsonify({'status': 'success'})
 
-@app.route('/get-lines', methods=['GET'])
-def get_lines():
-    session_id = request.cookies.get('session_id')
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    query = "SELECT id, x1, y1, x2, y2 FROM lines_table WHERE session_id=%s"
-    cursor.execute(query, (session_id,))
-    lines = cursor.fetchall()
-    cursor.close()
-    conn.close()
-    return jsonify([{'id': row[0], 'x1': row[1], 'y1': row[2], 'x2': row[3], 'y2': row[4]} for row in lines])
+# Database connection
+def get_db_connection():
+    return pymysql.connect(
+        host='localhost',
+        user='femsol_user',
+        password='Dreamsneverdie@21',
+        db='femsol_db',
+        cursorclass=pymysql.cursors.DictCursor
+    )
 
-@app.route('/update-row-numbers', methods=['POST'])
-def update_row_numbers():
+# Route to get all lines
+@app.route('/get-all-lines', methods=['GET'])
+def get_all_lines():
     conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SET @row_number = 0;")
-    cursor.execute("""
-        UPDATE lines_table 
-        SET row_num = (@row_number := @row_number + 1)
-        WHERE session_id = %s
-        ORDER BY id;
-    """, (session['id'],))
-    conn.commit()
-    cursor.close()
+    with conn.cursor() as cursor:
+        sql = "SELECT * FROM lines_table"
+        cursor.execute(sql)
+        lines = cursor.fetchall()
     conn.close()
-    return jsonify({'status': 'success'})
+    return jsonify(lines)
+
+# Route to get a specific line by ID
+@app.route('/get-line/<int:line_id>', methods=['GET'])
+def get_line(line_id):
+    conn = get_db_connection()
+    with conn.cursor() as cursor:
+        sql = "SELECT * FROM lines_table WHERE id = %s"
+        cursor.execute(sql, (line_id,))
+        line_data = cursor.fetchone()
+    conn.close()
+    return jsonify(line_data)
+
+# Route to add a new force to the forces_table
+@app.route('/add-force', methods=['POST'])
+def add_force():
+    data = request.get_json()
+    line_id = data.get('line_id')
+    x1 = data.get('x1')
+    y1 = data.get('y1')
+    x2 = data.get('x2')
+    y2 = data.get('y2')
+    fx = data.get('fx')
+    fy = data.get('fy')
+    x = data.get('x')
+    y = data.get('y')
+
+    conn = get_db_connection()
+    with conn.cursor() as cursor:
+        sql = """
+        INSERT INTO forces_table (line_id, x1, y1, x2, y2, fx, fy, x, y)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """
+        cursor.execute(sql, (line_id, x1, y1, x2, y2, fx, fy, x, y))
+    conn.commit()
+    conn.close()
+
+    return jsonify({"status": "success"})
 
 
 if __name__ == "__main__":
