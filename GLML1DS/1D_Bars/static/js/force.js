@@ -1,21 +1,28 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const lineSelectForce = document.getElementById('lineSelectForce');
-    const addForceBtn = document.getElementById('addForce');
-    const fxInput = document.getElementById('fx');
-    const fyInput = document.getElementById('fy');
-    const forceXInput = document.getElementById('forceX');
-    const forceYInput = document.getElementById('forceY');
+document.addEventListener('DOMContentLoaded', async () => {
+    let lines = [];
+    let selectedLineData = {}; // This will store the fetched data for later use
+    const sessionID = getCookie('session_id');
 
-    addForceBtn.addEventListener('click', async () => {
-        const selectedLineId = lineSelectForce.value;
-        if (selectedLineId === "") {
-            alert("Please select a line.");
-            return;
-        }
-
+    // Function to fetch lines from the backend
+    async function fetchLines() {
         try {
-            console.log("Fetching line data for ID:", selectedLineId);
-            const response = await fetch(`/get-line/${selectedLineId}`);
+            const response = await fetch('/get-lines', { cache: 'no-cache' });
+            const data = await response.json();
+            console.log('Fetched data:', data);
+            if (Array.isArray(data) && data.length > 0) {
+                lines = data;
+            } else {
+                console.error('No lines fetched or invalid data format:', data);
+            }
+        } catch (error) {
+            console.error('Error fetching lines:', error);
+        }
+    }
+
+    // Function to highlight and fetch data for the selected line
+    async function highlightAndFetchLineData(lineNumber) {
+        try {
+            const response = await fetch(`/get-line-by-number/${lineNumber}`);
             const selectedLine = await response.json();
 
             if (response.status !== 200 || !selectedLine || !selectedLine.x1 || !selectedLine.y1 || !selectedLine.x2 || !selectedLine.y2) {
@@ -26,63 +33,46 @@ document.addEventListener('DOMContentLoaded', () => {
 
             console.log("Line data received:", selectedLine);
 
-            const fx = parseFloat(fxInput.value);
-            const fy = parseFloat(fyInput.value);
-            const x = parseFloat(forceXInput.value);
-            const y = parseFloat(forceYInput.value);
+            // Store the fetched data
+            selectedLineData = selectedLine;
+            window.selectedLineData = selectedLineData; // Make available globally
 
-            if (isNaN(fx) || isNaN(fy) || isNaN(x) || isNaN(y)) {
-                alert("Please enter valid force and coordinate values.");
-                return;
-            }
+            // Display the fetched data in non-editable buttons
+            document.getElementById('displayID').value = selectedLine.id;
+            document.getElementById('displaySessionID').value = selectedLine.session_id;
+            document.getElementById('displayX1').value = selectedLine.x1;
+            document.getElementById('displayY1').value = selectedLine.y1;
+            document.getElementById('displayX2').value = selectedLine.x2;
+            document.getElementById('displayY2').value = selectedLine.y2;
 
-            // Check if the force is within the body (line)
-            const isWithinBody = isPointOnLine(selectedLine, x, y);
-
-            if (!isWithinBody) {
-                alert("The force is out of the body.");
-                return;
-            }
-
-            // Send the force data to the server to store it in forces_table
-            const storeResponse = await fetch(`/store-force-data`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    line_id: selectedLine.id,
-                    session_id: selectedLine.session_id,
-                    x1: selectedLine.x1,
-                    y1: selectedLine.y1,
-                    x2: selectedLine.x2,
-                    y2: selectedLine.y2,
-                    fx: fx,
-                    fy: fy,
-                    x: x,
-                    y: y
-                })
-            });
-
-            const result = await storeResponse.json();
-
-            if (result.status === "success") {
-                alert('Force data stored successfully.');
-            } else {
-                alert('Failed to store force data.');
-            }
+            // Highlighting logic (assuming you have a canvas or other method to show highlights)
+            highlightLineOnCanvas(selectedLine);
         } catch (error) {
-            console.error('Error storing force data:', error);
-            alert('Failed to store force data.');
+            console.error('Error fetching line data:', error);
+            alert('Failed to fetch line data.');
         }
+    }
+
+    // Example function to handle highlighting (to be replaced with your actual implementation)
+    function highlightLineOnCanvas(lineData) {
+        console.log("Highlighting line on canvas:", lineData);
+        // Implement your canvas highlighting logic here
+    }
+
+    // Load initial data
+    await fetchLines();
+
+    // Example of how to call the highlightAndFetchLineData function
+    // Assuming you have a way to know which line is selected (e.g., a click event)
+    document.getElementById('canvas').addEventListener('click', () => {
+        const selectedLineNumber = 2; // Replace with actual logic to determine selected line number
+        highlightAndFetchLineData(selectedLineNumber);
     });
 
-    function isPointOnLine(line, x, y) {
-        const { x1, y1, x2, y2 } = line;
-        const distance = Math.abs((y2 - y1) * x - (x2 - x1) * y + x2 * y1 - y2 * x1) / Math.sqrt((y2 - y1) ** 2 + (x2 - x1) ** 2);
-        const lineLength = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
-        const pointToStart = Math.sqrt((x - x1) ** 2 + (y - y1) ** 2);
-        const pointToEnd = Math.sqrt((x - x2) ** 2 + (y - y2) ** 2);
-        return (distance < 1e-5 && pointToStart <= lineLength && pointToEnd <= lineLength);
+    // Function to get a cookie by name
+    function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
     }
 });
