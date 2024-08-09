@@ -162,6 +162,35 @@ def add_force():
         print("Error:", str(e))  # Log the error on the server for debugging
         return jsonify({"status": "error", "message": str(e)}), 500
 
+@app.route('/update-force-with-line-data', methods=['POST'])
+def update_force_with_line_data():
+    try:
+        data = request.get_json()
+        line_id = data.get('line_id')
+        x1 = data.get('x1')
+        y1 = data.get('y1')
+        x2 = data.get('x2')
+        y2 = data.get('y2')
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Assuming that forces_table has a corresponding line_id and you want to update the coordinates
+        query = """
+            UPDATE forces_table
+            SET x1=%s, y1=%s, x2=%s, y2=%s
+            WHERE line_id=%s AND (x1 IS NULL OR y1 IS NULL OR x2 IS NULL OR y2 IS NULL)
+        """
+        cursor.execute(query, (x1, y1, x2, y2, line_id))
+        conn.commit()
+
+        cursor.close()
+        conn.close()
+
+        return jsonify({"status": "success"})
+    except Exception as e:
+        print("Error:", str(e))  # Log the error on the server for debugging
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 
 if __name__ == "__main__":
