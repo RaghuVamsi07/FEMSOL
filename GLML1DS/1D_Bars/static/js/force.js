@@ -13,15 +13,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!response.ok) {
             throw new Error(`Failed to fetch line data: ${response.statusText}`);
         }
-
         const selectedLine = await response.json();
-        console.log("Fetched line data:", selectedLine);
+        // Handle the data...
+    } catch (error) {
+        console.error('Error fetching line data:', error);
+        alert('Failed to fetch line data.');
+    }
+}
 
-        if (!selectedLine || !selectedLine.x1 || !selectedLine.y1 || !selectedLine.x2 || !selectedLine.y2) {
-            console.error("Incomplete line data:", selectedLine);
-            alert("Failed to fetch line data or line data is incomplete.");
-            return;
-        }
 
         console.log("Line data received:", selectedLine);
 
