@@ -1,6 +1,11 @@
 document.addEventListener('DOMContentLoaded', () => {
     let selectedLineData = {}; // This will store the fetched data for later use
 
+    // Event listener to update the selected line number when a line is selected
+    document.getElementById('lineSelectForce').addEventListener('change', (event) => {
+        window.selectedLineNumber = event.target.value;
+    });
+
     // Function to highlight and fetch data for the selected line
     async function highlightAndFetchLineData(lineNumber) {
         try {
@@ -43,8 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Event listener for the Fetch button
     document.getElementById('fetchLineData').addEventListener('click', () => {
-        // Assuming the selected line number is determined by some other method, such as a previous user action
-        const selectedLineNumber = window.selectedLineNumber; // Example: you set this globally on line selection
+        const selectedLineNumber = window.selectedLineNumber;
         if (!selectedLineNumber) {
             alert("Please select a line first.");
             return;
