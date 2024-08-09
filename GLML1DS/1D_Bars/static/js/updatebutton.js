@@ -1,70 +1,33 @@
-let isDataUpToDate = false; // Variable to track if the data is up-to-date
-
-// Initialize the buttons and their event listeners
-function initButtons() {
-    const updateDataButton = document.getElementById('updateData');
-    
-    if (updateDataButton) {
-        updateDataButton.addEventListener('click', function() {
-            fetchLatestData();
-        });
-    }
-
-    // Add more button initializations here as needed in the future
-}
-
-function fetchLatestData() {
-    fetch('/get-lines')
+function updateRowNumbers() {
+    // Update the row numbers in the database when the update button is clicked
+    fetch('/update-row-numbers', { method: 'POST' })
         .then(response => response.json())
-        .then(data => {
-            updateLinesSection(data);  // Update lines section
-            isDataUpToDate = true;  // Mark data as up-to-date
+        .then(result => {
+            if (result.status === 'success') {
+                // After successful row number update, enable other sections
+                enableSections();
+            } else {
+                console.error('Failed to update row numbers');
+            }
         })
         .catch(error => {
-            console.error('Error fetching data:', error);
+            console.error('Error during row number update:', error);
         });
 }
 
-function updateLinesSection(data) {
-    console.log('Fetched lines:', data);
-    const lineSelect = document.getElementById('lineSelect');
-    lineSelect.innerHTML = '<option value="">Select a line to highlight</option>'; // Reset dropdown
-    data.forEach((line, index) => {
-        const option = document.createElement('option');
-        option.value = line.id;  // Use line ID directly
-        option.textContent = `Line ${index + 1}`;
-        lineSelect.appendChild(option);
-    });
+function enableSections() {
+    // Enable the sections or buttons that were disabled before the update
+    document.getElementById('forcesSection').style.display = 'block';
+    document.getElementById('distributiveForcesSection').style.display = 'block';
+    // Add more sections as needed
 }
 
-// Function to check if data is up-to-date before performing an action
-function checkDataUpToDate(actionCallback) {
-    if (!isDataUpToDate) {
-        alert('Please update the sketcher before proceeding.');
-    } else {
-        actionCallback(); // Proceed with the action if data is up-to-date
-    }
-}
+// Bind the updateRowNumbers function to the Update button
+document.getElementById('updateButton').addEventListener('click', updateRowNumbers);
 
-// Example usage: Add a force only if the data is up-to-date
-function initForceButton() {
-    const addForceButton = document.getElementById('addForce');
-    
-    if (addForceButton) {
-        addForceButton.addEventListener('click', function() {
-            checkDataUpToDate(() => {
-                console.log('Adding force...');
-            });
-        });
-    }
-}
-
-// Call this function in your main HTML or when the document is ready
-function initializeButtonHandlers() {
-    initButtons();
-    initForceButton();
-    // Add other button initializations here
-}
-
-// Ensure this script is called after the DOM is fully loaded
-document.addEventListener('DOMContentLoaded', initializeButtonHandlers);
+// Ensure sections are disabled initially
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('forcesSection').style.display = 'none';
+    document.getElementById('distributiveForcesSection').style.display = 'none';
+    // Add more sections as needed
+});
