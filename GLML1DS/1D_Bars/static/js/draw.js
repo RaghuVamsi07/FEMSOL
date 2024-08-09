@@ -139,27 +139,15 @@ function translateGrid(e) {
 
 document.getElementById('clearStorage').addEventListener('click', async () => {
     try {
-        const response = await fetch('/clear-lines', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ session_id: sessionID })
-        });
-        const result = await response.json();
-        if (result.status === 'success') {
-            lines = [];
-            draw();
-            updateLineSelect();
-            updateForceLineSelect();
-            // Clear additional dropdowns if necessary
-            // updateDistributiveLineSelect();
-            // updateBodyLineSelect();
-            // updateThermalLineSelect();
-            // updateMaterialLineSelect();
-        } else {
-            console.error('Failed to clear lines');
-        }
+        await fetch('/clear-lines', { method: 'POST' });
+        lines[sessionID] = [];
+        draw();
+        updateLineSelect();
+        updateForceLineSelect();
+        updateDistributiveLineSelect();
+        updateBodyLineSelect();
+        updateThermalLineSelect();
+        updateMaterialLineSelect();
     } catch (error) {
         console.error('Error clearing lines:', error);
     }
