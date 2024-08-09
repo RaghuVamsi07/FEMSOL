@@ -42,22 +42,6 @@ def index():
         session['id'] = session_id
         return render_template('1D_Bars.html')
 
-def update_line_id(session_id):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    # Update the line_id based on the order of the id (auto-increment)
-    cursor.execute("SET @row_number := 0;")
-    cursor.execute("""
-        UPDATE lines_table 
-        SET line_id = (@row_number:=@row_number + 1)
-        WHERE session_id = %s
-        ORDER BY id;
-    """, (session_id,))
-    conn.commit()
-    cursor.close()
-    conn.close()
-
 @app.route('/add-line', methods=['POST'])
 def add_line():
     data = request.json
@@ -68,13 +52,10 @@ def add_line():
     values = (data['x1'], data['y1'], data['x2'], data['y2'], session_id)
     cursor.execute(query, values)
     conn.commit()
+    line_id = cursor.lastrowid
     cursor.close()
     conn.close()
-    
-    # Update the line_id after inserting the new line
-    update_line_id(session_id)
-    
-    return jsonify({'status': 'success'})
+    return jsonify({'id': line_id})
 
 @app.route('/update-line/<int:line_id>', methods=['PUT'])
 def update_line(line_id):
@@ -88,10 +69,6 @@ def update_line(line_id):
     conn.commit()
     cursor.close()
     conn.close()
-    
-    # Optionally update the line_id if the order needs to be maintained or adjusted
-    update_line_id(session_id)
-    
     return jsonify({'status': 'success'})
 
 @app.route('/delete-line/<int:line_id>', methods=['DELETE'])
@@ -105,10 +82,6 @@ def delete_line(line_id):
     conn.commit()
     cursor.close()
     conn.close()
-    
-    # Update the line_id after a line is deleted
-    update_line_id(session_id)
-    
     return jsonify({'status': 'success'})
 
 @app.route('/clear-lines', methods=['POST'])
@@ -128,12 +101,12 @@ def get_lines():
     session_id = request.cookies.get('session_id')
     conn = get_db_connection()
     cursor = conn.cursor()
-    query = "SELECT id, x1, y1, x2, y2, line_id FROM lines_table WHERE session_id=%s ORDER BY line_id"
+    query = "SELECT id, x1, y1, x2, y2 FROM lines_table WHERE session_id=%s"
     cursor.execute(query, (session_id,))
     lines = cursor.fetchall()
     cursor.close()
     conn.close()
-    return jsonify([{'id': row[0], 'x1': row[1], 'y1': row[2], 'x2': row[3], 'line_id': row[4]} for row in lines])
+    return jsonify([{'id': row[0], 'x1': row[1], 'y1': row[2], 'x2': row[3], 'y2': row[4]} for row in lines])
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000, debug=True)
