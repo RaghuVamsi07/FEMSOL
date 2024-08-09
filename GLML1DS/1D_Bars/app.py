@@ -96,27 +96,6 @@ def clear_lines():
     conn.close()
     return jsonify({'status': 'success'})
 
-# Database connection
-def get_db_connection():
-    return pymysql.connect(
-        host='localhost',
-        user='femsol_user',
-        password='Dreamsneverdie@21',
-        db='femsol_db',
-        cursorclass=pymysql.cursors.DictCursor
-    )
-
-# Route to get a specific line by ID
-@app.route('/get-line/<int:line_id>', methods=['GET'])
-def get_line(line_id):
-    conn = get_db_connection()
-    with conn.cursor() as cursor:
-        sql = "SELECT * FROM lines_table WHERE id = %s"
-        cursor.execute(sql, (line_id,))
-        line_data = cursor.fetchone()
-    conn.close()
-    return jsonify(line_data)
-
 @app.route('/get-lines', methods=['GET'])
 def get_lines():
     session_id = request.cookies.get('session_id')
@@ -129,10 +108,34 @@ def get_lines():
     conn.close()
     return jsonify([{'id': row[0], 'x1': row[1], 'y1': row[2], 'x2': row[3], 'y2': row[4]} for row in lines])
 
-# Route to add a new force to the forces_table
+# Route to get all lines (irrespective of session_id) if needed
+@app.route('/get-all-lines', methods=['GET'])
+def get_all_lines():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    query = "SELECT * FROM lines_table"
+    cursor.execute(query)
+    lines = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return jsonify(lines)
+
+# Route to get a specific line by its ID
+@app.route('/get-line/<int:line_id>', methods=['GET'])
+def get_line(line_id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    query = "SELECT * FROM lines_table WHERE id=%s"
+    cursor.execute(query, (line_id,))
+    line_data = cursor.fetchone()
+    cursor.close()
+    conn.close()
+    return jsonify(line_data)
+
+# Route to add a force to the forces_table
 @app.route('/add-force', methods=['POST'])
 def add_force():
-    data = request.get_json()
+    data = request.json
     line_id = data.get('line_id')
     x1 = data.get('x1')
     y1 = data.get('y1')
@@ -144,13 +147,14 @@ def add_force():
     y = data.get('y')
 
     conn = get_db_connection()
-    with conn.cursor() as cursor:
-        sql = """
+    cursor = conn.cursor()
+    query = """
         INSERT INTO forces_table (line_id, x1, y1, x2, y2, fx, fy, x, y)
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-        """
-        cursor.execute(sql, (line_id, x1, y1, x2, y2, fx, fy, x, y))
+    """
+    cursor.execute(query, (line_id, x1, y1, x2, y2, fx, fy, x, y))
     conn.commit()
+    cursor.close()
     conn.close()
 
     return jsonify({"status": "success"})
