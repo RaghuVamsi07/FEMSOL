@@ -87,20 +87,16 @@ def delete_line(line_id):
     conn.close()
     return jsonify({'status': 'success'})
 
-@app.route('/clear-storage', methods=['POST'])
-def clear_storage():
+@app.route('/clear-lines', methods=['POST'])
+def clear_lines():
+    session_id = request.cookies.get('session_id')
     conn = get_db_connection()
     cursor = conn.cursor()
-
-    # Clear all tables
-    cursor.execute('DELETE FROM lines_table')
-    cursor.execute('DELETE FROM forces_table')
-    # Add more DELETE statements if you have more tables
-
+    query = "DELETE FROM lines_table WHERE session_id=%s"
+    cursor.execute(query, (session_id,))
     conn.commit()
     cursor.close()
     conn.close()
-
     return jsonify({'status': 'success'})
 
 
