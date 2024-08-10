@@ -187,23 +187,30 @@ function updateMaterialLineSelect() {
     });
 }
 
-document.getElementById('saveLineNumber').addEventListener('click', async () => {
-    const lineNum = document.getElementById('lineNum').value;
-    const selectedLineIndex = document.getElementById('lineSelect').value;
-    
-    if (!lineNum || !selectedLineIndex) {
-        alert('Please enter a line number and select a line first.');
+document.getElementById('lineSelect').addEventListener('change', async () => {
+    const selectedLine = document.getElementById('lineSelect').value;
+
+    if (!selectedLine) {
+        alert('Please select a line first.');
         return;
     }
 
-    const selectedLine = lines[selectedLineIndex];  // Assuming `lines` is an array storing the line data
-    
-    if (!selectedLine) {
+    // Extract line number from the selected option
+    const lineNum = parseInt(selectedLine.replace('line ', ''));
+    if (isNaN(lineNum)) {
+        alert('Invalid line number.');
+        return;
+    }
+
+    const selectedLineIndex = selectedLine - 1; // Assuming the select value is 1-indexed
+    const lineData = lines[selectedLineIndex];  // Assuming `lines` is an array with line data
+
+    if (!lineData) {
         alert('Selected line not found.');
         return;
     }
 
-    selectedLine.line_num = parseInt(lineNum);
+    lineData.line_num = lineNum;
 
     try {
         const response = await fetch('/add-line-with-number', {
@@ -212,12 +219,12 @@ document.getElementById('saveLineNumber').addEventListener('click', async () => 
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                x1: selectedLine.x1,
-                y1: selectedLine.y1,
-                x2: selectedLine.x2,
-                y2: selectedLine.y2,
-                session_id: selectedLine.session_id,
-                line_num: selectedLine.line_num
+                x1: lineData.x1,
+                y1: lineData.y1,
+                x2: lineData.x2,
+                y2: lineData.y2,
+                session_id: lineData.session_id,
+                line_num: lineNum
             })
         });
 
@@ -231,7 +238,6 @@ document.getElementById('saveLineNumber').addEventListener('click', async () => 
         console.error('Error saving line number:', error);
     }
 });
-
 
 
 
