@@ -29,7 +29,7 @@
                 <label>X2: <input type="number" id="x2" /></label>
                 <label>Y2: <input type="number" id="y2" /></label>
             </div>
-            <button id="updateLines">Update Lines</button>
+            
             <div id="forcesSection">
                 <h3>Forces</h3>
                 <label for="lineSelectForce">Select Line:</label>
@@ -145,24 +145,7 @@
             window.open('/results', '_blank');
         }
     </script>
-   <script> 
-    document.getElementById('updateLines').addEventListener('click', async () => {
-    try {
-        const response = await fetch('/update-lines', { method: 'POST' });
-        const data = await response.json();
-        if (data.status === 'success') {
-            alert('Lines updated successfully.');
-            // Optionally, reload or re-fetch the lines
-            await loadLines();  // Assuming loadLines is a function that refreshes the displayed lines
-        } else {
-            alert('Failed to update lines.');
-        }
-    } catch (error) {
-        console.error('Error updating lines:', error);
-        alert('Error updating lines.');
-    }
-});
- </script>
+  
 
 
 </body>
