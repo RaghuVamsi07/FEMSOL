@@ -59,6 +59,7 @@ def add_line_with_number():
     conn.close()
     return jsonify({'id': line_id})
 
+
 @app.route('/update-line/<int:line_id>', methods=['PUT'])
 def update_line(line_id):
     data = request.json
@@ -109,52 +110,6 @@ def get_lines():
     cursor.close()
     conn.close()
     return jsonify([{'id': row[0], 'x1': row[1], 'y1': row[2], 'x2': row[3], 'y2': row[4]} for row in lines])
-
-@app.route('/add-line-with-number', methods=['POST'])
-def add_line_with_number():
-    data = request.json
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    query = """
-    INSERT INTO lines_table (x1, y1, x2, y2, session_id, line_num)
-    VALUES (%s, %s, %s, %s, %s, %s)
-    """
-    values = (data['x1'], data['y1'], data['x2'], data['y2'], data['session_id'], data['line_num'])
-    cursor.execute(query, values)
-    conn.commit()
-    line_id = cursor.lastrowid
-    cursor.close()
-    conn.close()
-    return jsonify({'id': line_id})
-
-@app.route('/get-line-by-number/<int:line_num>', methods=['GET'])
-def get_line_by_number(line_num):
-    session_id = request.cookies.get('session_id')
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    query = """
-    SELECT id, x1, y1, x2, y2, session_id, line_num
-    FROM lines_table
-    WHERE line_num = %s AND session_id = %s
-    """
-    cursor.execute(query, (line_num, session_id))
-    line = cursor.fetchone()
-    cursor.close()
-    conn.close()
-    if line:
-        return jsonify({
-            'id': line[0],
-            'x1': line[1],
-            'y1': line[2],
-            'x2': line[3],
-            'y2': line[4],
-            'session_id': line[5],
-            'line_num': line[6]
-        })
-    else:
-        return jsonify({'error': 'Line not found'}), 404
-
-
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000, debug=True)
