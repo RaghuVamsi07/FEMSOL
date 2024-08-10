@@ -118,5 +118,31 @@ def get_lines():
     conn.close()
     return jsonify([{'id': row[0], 'x1': row[1], 'y1': row[2], 'x2': row[3], 'y2': row[4]} for row in lines])
 
+@app.route('/update-lines', methods=['POST'])
+def update_lines():
+    session_id = request.cookies.get('session_id')
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        renumber_query = """
+        SET @row_number = 0;
+        UPDATE lines_table 
+        SET line_num = (@row_number := @row_number + 1)
+        WHERE session_id=%s
+        ORDER BY id ASC;
+        """
+        cursor.execute("SET @row_number = 0;")  # Reset row number variable
+        cursor.execute(renumber_query, (session_id,))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return jsonify({'status': 'success'})
+    
+    except Exception as e:
+        print(f"Error updating lines: {e}")
+        conn.rollback()  # Rollback any changes if there is an error
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000, debug=True)
