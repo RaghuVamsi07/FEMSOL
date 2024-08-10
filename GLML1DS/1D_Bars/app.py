@@ -30,7 +30,7 @@ def get_db_connection():
     return conn
 
 def is_point_on_line(x1, y1, x2, y2, x, y):
-    # Check if the point (x, y) is on the line (x1, y1) to (x2, y2)
+    # Your is_point_on_line function logic here
     distance = abs((y2 - y1) * x - (x2 - x1) * y + x2 * y1 - y2 * x1) / ((y2 - y1)**2 + (x2 - x1)**2)**0.5
     line_length = ((x2 - x1)**2 + (y2 - y1)**2)**0.5
     point_to_start = ((x - x1)**2 + (y - y1)**2)**0.5
@@ -151,7 +151,6 @@ def save_force():
     try:
         data = request.json
         print('Received data:', data)  # Debug print
-        
         session_id = request.cookies.get('session_id')
         
         # Fetch the line's coordinates based on line_num and session_id
@@ -192,10 +191,9 @@ def save_force():
         cursor.close()
         conn.close()
 
-        return jsonify({'status': 'success'}), 200
-    
+        return jsonify({'status': 'success'})
     except Exception as e:
-        print("Error saving force data:", e)
+        print(f"Error occurred: {e}")  # Log the error
         return jsonify({'status': 'error', 'message': 'Failed to save force data.'}), 500
 
 
