@@ -92,17 +92,8 @@ def clear_lines():
     session_id = request.cookies.get('session_id')
     conn = get_db_connection()
     cursor = conn.cursor()
-
-    # Clear lines
-    query_lines = "DELETE FROM lines_table WHERE session_id=%s"
-    cursor.execute(query_lines, (session_id,))
-
-    # Clear other tables, such as forces_table, etc.
-    query_forces = "DELETE FROM forces_table WHERE session_id=%s"
-    cursor.execute(query_forces, (session_id,))
-
-    # Add similar queries for other tables as needed
-
+    query = "DELETE FROM lines_table WHERE session_id=%s"
+    cursor.execute(query, (session_id,))
     conn.commit()
     cursor.close()
     conn.close()
