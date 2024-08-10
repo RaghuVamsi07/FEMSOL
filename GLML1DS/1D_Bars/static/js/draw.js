@@ -146,7 +146,7 @@ function translateGrid(e) {
 
 document.getElementById('clearStorage').addEventListener('click', async () => {
     try {
-        await fetch('/clear-lines', { method: 'POST' });
+        await fetch('/clear-all', { method: 'POST' });
         lines[sessionID] = [];
         draw();
         updateLineSelect();
@@ -156,7 +156,7 @@ document.getElementById('clearStorage').addEventListener('click', async () => {
         updateThermalLineSelect();
         updateMaterialLineSelect();
     } catch (error) {
-        console.error('Error clearing lines:', error);
+        console.error('Error clearing all data:', error);
     }
 });
 
