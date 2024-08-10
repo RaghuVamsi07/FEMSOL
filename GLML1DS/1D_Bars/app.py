@@ -149,6 +149,7 @@ def get_lines():
 @app.route('/save-force', methods=['POST'])
 def save_force():
     data = request.json
+    print('Received data:', data)  # Debug print
     session_id = request.cookies.get('session_id')
     
     # Fetch the line's coordinates based on line_num and session_id
