@@ -24,7 +24,35 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Validation failed: Invalid input values.');
             return;
         }
+        document.addEventListener('DOMContentLoaded', () => {
+    const addForceBtn = document.getElementById('addForce');
+    addForceBtn.addEventListener('click', async () => {
+        // Your data gathering and sending logic
+        try {
+            const response = await fetch('/save-force', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(forceData),
+            });
 
+            const result = await response.json();
+
+            if (response.ok) {
+                console.log('Force data saved successfully:', result);
+                alert('Force data saved successfully.');
+            } else {
+                console.error('Error saving force data:', result.message);
+                alert('Failed to save force data: ' + result.message);
+            }
+        } catch (error) {
+            console.error('Error saving force data:', error);
+            alert('An error occurred while saving force data.');
+        }
+    });
+});
+     
         // Prepare data for sending to the server
         const forceData = {
             line_num: lineNum,
