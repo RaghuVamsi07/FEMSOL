@@ -196,7 +196,7 @@ document.getElementById('saveLineNumber').addEventListener('click', async () => 
         return;
     }
 
-    const selectedLine = lines[selectedLineIndex];  // Assuming lines array contains the drawn lines with their data
+    const selectedLine = lines[selectedLineIndex];  // Assuming `lines` is an array storing the line data
     
     if (!selectedLine) {
         alert('Selected line not found.');
@@ -211,14 +211,19 @@ document.getElementById('saveLineNumber').addEventListener('click', async () => 
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify(selectedLine)
+            body: JSON.stringify({
+                x1: selectedLine.x1,
+                y1: selectedLine.y1,
+                x2: selectedLine.x2,
+                y2: selectedLine.y2,
+                session_id: selectedLine.session_id,
+                line_num: selectedLine.line_num
+            })
         });
 
         const result = await response.json();
         if (result.id) {
             alert('Line number saved successfully');
-            selectedLine.id = result.id;
-            // If needed, update the UI or other state to reflect the saved line number
         } else {
             alert('Failed to save line number');
         }
