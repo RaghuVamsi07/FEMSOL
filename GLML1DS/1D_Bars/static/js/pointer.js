@@ -187,60 +187,6 @@ function updateMaterialLineSelect() {
     });
 }
 
-document.getElementById('lineSelect').addEventListener('change', async () => {
-    const selectedLine = document.getElementById('lineSelect').value;
-
-    if (!selectedLine) {
-        alert('Please select a line first.');
-        return;
-    }
-
-    // Extract line number from the selected option
-    const lineNum = parseInt(selectedLine.replace('line ', ''));
-    if (isNaN(lineNum)) {
-        alert('Invalid line number.');
-        return;
-    }
-
-    const selectedLineIndex = selectedLine - 1; // Assuming the select value is 1-indexed
-    const lineData = lines[selectedLineIndex];  // Assuming `lines` is an array with line data
-
-    if (!lineData) {
-        alert('Selected line not found.');
-        return;
-    }
-
-    lineData.line_num = lineNum;
-
-    try {
-        const response = await fetch('/add-line-with-number', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                x1: lineData.x1,
-                y1: lineData.y1,
-                x2: lineData.x2,
-                y2: lineData.y2,
-                session_id: lineData.session_id,
-                line_num: lineNum
-            })
-        });
-
-        const result = await response.json();
-        if (result.id) {
-            alert('Line number saved successfully');
-        } else {
-            alert('Failed to save line number');
-        }
-    } catch (error) {
-        console.error('Error saving line number:', error);
-    }
-});
-
-
-
 document.addEventListener('DOMContentLoaded', async () => {
     await loadLines();
     updateLineSelect();
