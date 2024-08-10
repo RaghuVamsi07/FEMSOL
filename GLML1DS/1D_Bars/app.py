@@ -29,6 +29,16 @@ def get_db_connection():
     conn = mysql.connector.connect(**db_config)
     return conn
 
+def is_point_on_line(x1, y1, x2, y2, x, y):
+    # Check if the point (x, y) is on the line (x1, y1) to (x2, y2)
+    distance = abs((y2 - y1) * x - (x2 - x1) * y + x2 * y1 - y2 * x1) / ((y2 - y1)**2 + (x2 - x1)**2)**0.5
+    line_length = ((x2 - x1)**2 + (y2 - y1)**2)**0.5
+    point_to_start = ((x - x1)**2 + (y - y1)**2)**0.5
+    point_to_end = ((x - x2)**2 + (y - y2)**2)**0.5
+    return distance < 1e-5 and point_to_start <= line_length and point_to_end <= line_length
+
+
+
 @app.route('/')
 def index():
     # Check if session_id is already in the cookies
@@ -133,6 +143,56 @@ def get_lines():
     cursor.close()
     conn.close()
     return jsonify([{'id': row[0], 'x1': row[1], 'y1': row[2], 'x2': row[3], 'y2': row[4]} for row in lines])
+
+
+
+@app.route('/save-force', methods=['POST'])
+def save_force():
+    data = request.json
+    session_id = request.cookies.get('session_id')
+    
+    # Fetch the line's coordinates based on line_num and session_id
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    query = "SELECT x1, y1, x2, y2 FROM lines_table WHERE line_num=%s AND session_id=%s"
+    cursor.execute(query, (data['line_num'], session_id))
+    line_data = cursor.fetchone()
+
+    if not line_data:
+        cursor.close()
+        conn.close()
+        return jsonify({'status': 'error', 'message': 'Line not found.'}), 400
+
+    x1, y1, x2, y2 = line_data
+
+    # Check if the point (x, y) is on the line
+    if not is_point_on_line(x1, y1, x2, y2, data['x'], data['y']):
+        cursor.close()
+        conn.close()
+        return jsonify({'status': 'error', 'message': 'The point is outside the line.'}), 400
+
+    # Insert force data into forces_table
+    query = """
+    INSERT INTO forces_table (line_num, force_num, x, y, fx, fy, session_id)
+    VALUES (%s, %s, %s, %s, %s, %s, %s)
+    """
+    cursor.execute(query, (
+        data['line_num'], 
+        data['force_num'], 
+        data['x'], 
+        data['y'], 
+        data['fx'], 
+        data['fy'], 
+        session_id
+    ))
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    return jsonify({'status': 'success'})
+
+
+
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000, debug=True)
