@@ -124,67 +124,72 @@ zoomOutBtn.addEventListener('click', () => {
 function updateLineSelect() {
     const lineSelect = document.getElementById('lineSelect');
     lineSelect.innerHTML = '<option value="">Select a line to highlight</option>';
-    (lines[sessionID] || []).forEach((line, index) => {
-        const option = document.createElement('option');
-        option.value = index;
-        option.textContent = `Line ${index + 1}`;
-        lineSelect.appendChild(option);
-    });
+    (lines[sessionID] || []).forEach((line) => {
+    const option = document.createElement('option');
+    option.value = line.line_num; // Use the original line number
+    option.textContent = `Line ${line.line_num}`; // Keep the original line name
+    lineSelect.appendChild(option);
+});
 }
 
 function updateForceLineSelect() {
     const lineSelectForce = document.getElementById('lineSelectForce');
     lineSelectForce.innerHTML = '<option value="">Select a line</option>';
-    (lines[sessionID] || []).forEach((line, index) => {
-        const option = document.createElement('option');
-        option.value = index;
-        option.textContent = `Line ${index + 1}`;
-        lineSelectForce.appendChild(option);
-    });
+    (lines[sessionID] || []).forEach((line) => {
+    const option = document.createElement('option');
+    option.value = line.line_num; // Use the original line number
+    option.textContent = `Line ${line.line_num}`; // Keep the original line name
+    lineSelect.appendChild(option);
+});
+
 }
 
 function updateDistributiveLineSelect() {
     const lineSelectDistributive = document.getElementById('lineSelectDistributive');
     lineSelectDistributive.innerHTML = '<option value="">Select a line</option>';
-    (lines[sessionID] || []).forEach((line, index) => {
-        const option = document.createElement('option');
-        option.value = index;
-        option.textContent = `Line ${index + 1}`;
-        lineSelectDistributive.appendChild(option);
-    });
+    (lines[sessionID] || []).forEach((line) => {
+    const option = document.createElement('option');
+    option.value = line.line_num; // Use the original line number
+    option.textContent = `Line ${line.line_num}`; // Keep the original line name
+    lineSelect.appendChild(option);
+});
+
 }
 
 function updateBodyLineSelect() {
     const lineSelectBody = document.getElementById('lineSelectBody');
     lineSelectBody.innerHTML = '<option value="">Select a line</option>';
-    (lines[sessionID] || []).forEach((line, index) => {
-        const option = document.createElement('option');
-        option.value = index;
-        option.textContent = `Line ${index + 1}`;
-        lineSelectBody.appendChild(option);
-    });
+    (lines[sessionID] || []).forEach((line) => {
+    const option = document.createElement('option');
+    option.value = line.line_num; // Use the original line number
+    option.textContent = `Line ${line.line_num}`; // Keep the original line name
+    lineSelect.appendChild(option);
+});
+
 }
 
 function updateThermalLineSelect() {
     const lineSelectThermal = document.getElementById('lineSelectThermal');
     lineSelectThermal.innerHTML = '<option value="">Select a line</option>';
-    (lines[sessionID] || []).forEach((line, index) => {
-        const option = document.createElement('option');
-        option.value = index;
-        option.textContent = `Line ${index + 1}`;
-        lineSelectThermal.appendChild(option);
-    });
+    (lines[sessionID] || []).forEach((line) => {
+    const option = document.createElement('option');
+    option.value = line.line_num; // Use the original line number
+    option.textContent = `Line ${line.line_num}`; // Keep the original line name
+    lineSelect.appendChild(option);
+});
+
 }
 
 function updateMaterialLineSelect() {
     const lineSelectMaterial = document.getElementById('lineSelectMaterial');
     lineSelectMaterial.innerHTML = '<option value="">Select a line</option>';
-    (lines[sessionID] || []).forEach((line, index) => {
-        const option = document.createElement('option');
-        option.value = index;
-        option.textContent = `Line ${index + 1}`;
-        lineSelectMaterial.appendChild(option);
-    });
+    (lines[sessionID] || []).forEach((line) => {
+    const option = document.createElement('option');
+    option.value = line.line_num; // Use the original line number
+    option.textContent = `Line ${line.line_num}`; // Keep the original line name
+    lineSelect.appendChild(option);
+});
+
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
