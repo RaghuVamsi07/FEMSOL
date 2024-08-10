@@ -3,22 +3,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     let lines = [];
     const sessionID = getCookie('session_id');
 
-    // Function to fetch lines from the backend
-    async function fetchLines() {
-        try {
-            const response = await fetch('/get-lines', { cache: 'no-cache' });
-            const data = await response.json();
-            console.log('Fetched data:', data);
-            if (Array.isArray(data) && data.length > 0) {
-                lines = data;
-                updateForceLineSelect();
-            } else {
-                console.error('No lines fetched or invalid data format:', data);
-            }
-        } catch (error) {
-            console.error('Error fetching lines:', error);
-        }
-    }
+    
 
     // Function to populate the line selection dropdown
     function updateForceLineSelect() {
@@ -31,29 +16,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // Load initial data and populate dropdown
-    await fetchLines();
-
-    // Function to highlight the selected line
-    lineSelectForce.addEventListener('change', () => {
-        const line_id = lineSelectForce.value;
-        console.log('Selected Line ID:', line_id);
-
-        if (!line_id) {
-            alert("Please select a line.");
-            return;
-        }
-
-        const selectedLine = lines.find(line => line.id === parseInt(line_id));
-        console.log('Selected line:', selectedLine);
-
-        if (!selectedLine) {
-            alert("Selected line is not valid.");
-            return;
-        }
-
-        highlightLine(selectedLine);
-    });
+  
 
     // Function to highlight a line on the canvas
     function highlightLine(line) {
