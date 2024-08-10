@@ -146,7 +146,7 @@ function translateGrid(e) {
 
 document.getElementById('clearStorage').addEventListener('click', async () => {
     try {
-        await fetch('/clear-all', { method: 'POST' });
+        await fetch('/clear-lines', { method: 'POST' });
         lines[sessionID] = [];
         draw();
         updateLineSelect();
