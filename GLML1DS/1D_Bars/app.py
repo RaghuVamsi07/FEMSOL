@@ -153,7 +153,7 @@ def get_lines():
 def save_force():
     try:
         data = request.json
-        print('Received data:', data)  # Debug print
+        print('Received data:', data)
         session_id = request.cookies.get('session_id')
         
         # Fetch the line's coordinates based on line_num and session_id
@@ -179,29 +179,33 @@ def save_force():
             return jsonify({'status': 'error', 'message': 'The point is outside the line.'}), 400
 
         # Insert force data into forces_table
-        query = """
-        INSERT INTO forces_table (line_num, force_num, x, y, fx, fy, session_id)
-        VALUES (%s, %s, %s, %s, %s, %s, %s)
-        """
-        cursor.execute(query, (
-            data['line_num'], 
-            data['force_num'], 
-            data['x'], 
-            data['y'], 
-            data['fx'], 
-            data['fy'], 
-            session_id
-        ))
-        conn.commit()
-        cursor.close()
-        conn.close()
+        try:
+            query = """
+            INSERT INTO forces_table (line_num, force_num, x, y, fx, fy, session_id)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """
+            cursor.execute(query, (
+                data['line_num'], 
+                data['force_num'], 
+                data['x'], 
+                data['y'], 
+                data['fx'], 
+                data['fy'], 
+                session_id
+            ))
+            conn.commit()
+        except Exception as e:
+            print(f"Failed to insert force data: {e}")
+            return jsonify({'status': 'error', 'message': 'Failed to save force data.'}), 500
+        finally:
+            cursor.close()
+            conn.close()
 
         return jsonify({'status': 'success'})
 
     except Exception as e:
         print(f"Error occurred: {e}")
         return jsonify({'status': 'error', 'message': 'Failed to save force data.'}), 500
-
 
 
 
