@@ -85,13 +85,30 @@ def delete_line(line_id):
     session_id = request.cookies.get('session_id')
     conn = get_db_connection()
     cursor = conn.cursor()
-    query = "DELETE FROM lines_table WHERE id=%s AND session_id=%s"
-    values = (line_id, session_id)
-    cursor.execute(query, values)
-    conn.commit()
+
+    # Get the line number of the line to be deleted
+    cursor.execute("SELECT line_num FROM lines_table WHERE id=%s AND session_id=%s", (line_id, session_id))
+    line_num_result = cursor.fetchone()
+    
+    if line_num_result:
+        line_num = line_num_result[0]
+
+        # Delete the line
+        cursor.execute("DELETE FROM lines_table WHERE id=%s AND session_id=%s", (line_id, session_id))
+        conn.commit()
+
+        # Update line numbers of remaining lines
+        cursor.execute("""
+            UPDATE lines_table
+            SET line_num = line_num - 1
+            WHERE session_id=%s AND line_num > %s
+        """, (session_id, line_num))
+        conn.commit()
+
     cursor.close()
     conn.close()
     return jsonify({'status': 'success'})
+
 
 @app.route('/clear-lines', methods=['POST'])
 def clear_lines():
