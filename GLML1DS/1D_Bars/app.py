@@ -42,23 +42,20 @@ def index():
         session['id'] = session_id
         return render_template('1D_Bars.html')
 
-@app.route('/add-line-with-number', methods=['POST'])
-def add_line_with_number():
+@app.route('/add-line', methods=['POST'])
+def add_line():
     data = request.json
+    session_id = request.cookies.get('session_id')
     conn = get_db_connection()
     cursor = conn.cursor()
-    query = """
-    INSERT INTO lines_table (x1, y1, x2, y2, session_id, line_num)
-    VALUES (%s, %s, %s, %s, %s, %s)
-    """
-    values = (data['x1'], data['y1'], data['x2'], data['y2'], data['session_id'], data['line_num'])
+    query = "INSERT INTO lines_table (x1, y1, x2, y2, session_id) VALUES (%s, %s, %s, %s, %s)"
+    values = (data['x1'], data['y1'], data['x2'], data['y2'], session_id)
     cursor.execute(query, values)
     conn.commit()
     line_id = cursor.lastrowid
     cursor.close()
     conn.close()
     return jsonify({'id': line_id})
-
 
 @app.route('/update-line/<int:line_id>', methods=['PUT'])
 def update_line(line_id):
