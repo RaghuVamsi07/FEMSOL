@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify, render_template, session, make_respon
 import mysql.connector
 import os
 from flask_session import Session
+from math import isclose
 import uuid
 
 app = Flask(__name__, static_folder='static')
@@ -30,13 +31,16 @@ def get_db_connection():
     return conn
 
 def is_point_on_line(x1, y1, x2, y2, x, y):
-    # Your is_point_on_line function logic here
-    distance = abs((y2 - y1) * x - (x2 - x1) * y + x2 * y1 - y2 * x1) / ((y2 - y1)**2 + (x2 - x1)**2)**0.5
-    line_length = ((x2 - x1)**2 + (y2 - y1)**2)**0.5
-    point_to_start = ((x - x1)**2 + (y - y1)**2)**0.5
-    point_to_end = ((x - x2)**2 + (y - y2)**2)**0.5
-    return distance < 1e-5 and point_to_start <= line_length and point_to_end <= line_length
-
+    # Check if the point (x, y) is on the line (x1, y1) to (x2, y2)
+    try:
+        distance = abs((y2 - y1) * x - (x2 - x1) * y + x2 * y1 - y2 * x1) / ((y2 - y1) ** 2 + (x2 - x1) ** 2) ** 0.5
+        line_length = ((x2 - x1) ** 2 + (y2 - y1) ** 2) ** 0.5
+        point_to_start = ((x - x1) ** 2 + (y - y1) ** 2) ** 0.5
+        point_to_end = ((x - x2) ** 2 + (y - y2) ** 2) ** 0.5
+        return isclose(distance, 0, abs_tol=1e-5) and point_to_start <= line_length and point_to_end <= line_length
+    except Exception as e:
+        print(f"Error in is_point_on_line: {e}")
+        return False
 
 
 @app.route('/')
@@ -145,7 +149,6 @@ def get_lines():
     return jsonify([{'id': row[0], 'x1': row[1], 'y1': row[2], 'x2': row[3], 'y2': row[4]} for row in lines])
 
 
-
 @app.route('/save-force', methods=['POST'])
 def save_force():
     try:
@@ -161,6 +164,7 @@ def save_force():
         line_data = cursor.fetchone()
 
         if not line_data:
+            print("Line not found.")
             cursor.close()
             conn.close()
             return jsonify({'status': 'error', 'message': 'Line not found.'}), 400
@@ -169,6 +173,7 @@ def save_force():
 
         # Check if the point (x, y) is on the line
         if not is_point_on_line(x1, y1, x2, y2, data['x'], data['y']):
+            print("The point is outside the line.")
             cursor.close()
             conn.close()
             return jsonify({'status': 'error', 'message': 'The point is outside the line.'}), 400
@@ -192,9 +197,11 @@ def save_force():
         conn.close()
 
         return jsonify({'status': 'success'})
+
     except Exception as e:
-        print(f"Error occurred: {e}")  # Log the error
+        print(f"Error occurred: {e}")
         return jsonify({'status': 'error', 'message': 'Failed to save force data.'}), 500
+
 
 
 
