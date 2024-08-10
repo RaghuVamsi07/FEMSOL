@@ -96,13 +96,7 @@ canvas.addEventListener('mousemove', (e) => {
 canvas.addEventListener('mouseup', async () => {
     if (drawing) {
         drawing = false;
-        const lineCount = lines[sessionID] ? lines[sessionID].length : 0;
-        const newLine = { 
-            x1, y1, x2, y2, 
-            session_id: sessionID, 
-            line_num: lineCount + 1 // Dynamically assign line number
-        };
-
+        const newLine = { x1, y1, x2, y2, session_id: sessionID };
         if (!lines[sessionID]) {
             lines[sessionID] = [];
         }
@@ -110,7 +104,7 @@ canvas.addEventListener('mouseup', async () => {
 
         // Send line data to the server
         try {
-            const response = await fetch('/add-line-with-number', {
+            const response = await fetch('/add-line', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(newLine)
@@ -132,7 +126,6 @@ canvas.addEventListener('mouseup', async () => {
         canvas.style.cursor = 'default';
     }
 });
-
 
 function translateGrid(e) {
     const dx = e.offsetX - translateStartX;
