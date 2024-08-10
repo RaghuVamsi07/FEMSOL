@@ -143,7 +143,6 @@ function translateGrid(e) {
     translateStartY = e.offsetY;
     draw();
 }
-
 document.getElementById('clearStorage').addEventListener('click', async () => {
     try {
         await fetch('/clear-lines', { method: 'POST' });
@@ -156,9 +155,10 @@ document.getElementById('clearStorage').addEventListener('click', async () => {
         updateThermalLineSelect();
         updateMaterialLineSelect();
     } catch (error) {
-        console.error('Error clearing all data:', error);
+        console.error('Error clearing lines:', error);
     }
 });
+
 
 document.getElementById('translateGrid').addEventListener('click', () => {
     translating = !translating;
