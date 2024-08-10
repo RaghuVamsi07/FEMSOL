@@ -153,7 +153,8 @@ def get_lines():
 def save_force():
     try:
         data = request.json
-        print('Received data:', data)
+        print('Received data:', data)  # Log the received data
+
         session_id = request.cookies.get('session_id')
         
         # Fetch the line's coordinates based on line_num and session_id
@@ -163,8 +164,9 @@ def save_force():
         cursor.execute(query, (data['line_num'], session_id))
         line_data = cursor.fetchone()
 
+        print('Fetched line data:', line_data)  # Log the fetched line data
+
         if not line_data:
-            print("Line not found.")
             cursor.close()
             conn.close()
             return jsonify({'status': 'error', 'message': 'Line not found.'}), 400
@@ -173,40 +175,35 @@ def save_force():
 
         # Check if the point (x, y) is on the line
         if not is_point_on_line(x1, y1, x2, y2, data['x'], data['y']):
-            print("The point is outside the line.")
             cursor.close()
             conn.close()
+            print('Point is outside the line')  # Log the check failure
             return jsonify({'status': 'error', 'message': 'The point is outside the line.'}), 400
 
         # Insert force data into forces_table
-        try:
-            query = """
-            INSERT INTO forces_table (line_num, force_num, x, y, fx, fy, session_id)
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
-            """
-            cursor.execute(query, (
-                data['line_num'], 
-                data['force_num'], 
-                data['x'], 
-                data['y'], 
-                data['fx'], 
-                data['fy'], 
-                session_id
-            ))
-            conn.commit()
-        except Exception as e:
-            print(f"Failed to insert force data: {e}")
-            return jsonify({'status': 'error', 'message': 'Failed to save force data.'}), 500
-        finally:
-            cursor.close()
-            conn.close()
+        query = """
+        INSERT INTO forces_table (line_num, force_num, x, y, fx, fy, session_id)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """
+        cursor.execute(query, (
+            data['line_num'], 
+            data['force_num'], 
+            data['x'], 
+            data['y'], 
+            data['fx'], 
+            data['fy'], 
+            session_id
+        ))
+        conn.commit()
+        cursor.close()
+        conn.close()
 
+        print('Force data saved successfully')  # Log success
         return jsonify({'status': 'success'})
 
     except Exception as e:
-        print(f"Error occurred: {e}")
+        print('Error during save_force:', str(e))  # Log any exceptions
         return jsonify({'status': 'error', 'message': 'Failed to save force data.'}), 500
-
 
 
 if __name__ == "__main__":
