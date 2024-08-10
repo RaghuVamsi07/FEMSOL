@@ -87,8 +87,8 @@ def delete_line(line_id):
     conn.close()
     return jsonify({'status': 'success'})
 
-@app.route('/clear-all', methods=['POST'])
-def clear_all():
+@app.route('/clear-lines', methods=['POST'])
+def clear_lines():
     session_id = request.cookies.get('session_id')
     conn = get_db_connection()
     cursor = conn.cursor()
