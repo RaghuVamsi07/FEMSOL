@@ -187,6 +187,49 @@ function updateMaterialLineSelect() {
     });
 }
 
+document.getElementById('saveLineNumber').addEventListener('click', async () => {
+    const lineNum = document.getElementById('lineNum').value;
+    const selectedLineIndex = document.getElementById('lineSelect').value;
+    
+    if (!lineNum || !selectedLineIndex) {
+        alert('Please enter a line number and select a line first.');
+        return;
+    }
+
+    const selectedLine = lines[selectedLineIndex];  // Assuming lines array contains the drawn lines with their data
+    
+    if (!selectedLine) {
+        alert('Selected line not found.');
+        return;
+    }
+
+    selectedLine.line_num = parseInt(lineNum);
+
+    try {
+        const response = await fetch('/add-line-with-number', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(selectedLine)
+        });
+
+        const result = await response.json();
+        if (result.id) {
+            alert('Line number saved successfully');
+            selectedLine.id = result.id;
+            // If needed, update the UI or other state to reflect the saved line number
+        } else {
+            alert('Failed to save line number');
+        }
+    } catch (error) {
+        console.error('Error saving line number:', error);
+    }
+});
+
+
+
+
 document.addEventListener('DOMContentLoaded', async () => {
     await loadLines();
     updateLineSelect();
