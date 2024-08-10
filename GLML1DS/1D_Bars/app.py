@@ -31,34 +31,40 @@ def get_db_connection():
 
 @app.route('/')
 def index():
+    # Check if session_id is already in the cookies
     if 'session_id' not in request.cookies:
+        # Generate a new session_id if not present
         session_id = str(uuid.uuid4())
         session['id'] = session_id
         resp = make_response(render_template('1D_Bars.html'))
+        # Set the session_id as a cookie
         resp.set_cookie('session_id', session_id)
+        print(f"New session created: {session_id}")
         return resp
     else:
+        # Use the existing session_id
         session_id = request.cookies.get('session_id')
         session['id'] = session_id
+        print(f"Existing session found: {session_id}")
         return render_template('1D_Bars.html')
 
 @app.route('/add-line-with-number', methods=['POST'])
 def add_line_with_number():
     data = request.json
+    session_id = request.cookies.get('session_id')  # Ensure session_id is retrieved correctly
     conn = get_db_connection()
     cursor = conn.cursor()
     query = """
     INSERT INTO lines_table (x1, y1, x2, y2, session_id, line_num)
     VALUES (%s, %s, %s, %s, %s, %s)
     """
-    values = (data['x1'], data['y1'], data['x2'], data['y2'], data['session_id'], data['line_num'])
+    values = (data['x1'], data['y1'], data['x2'], data['y2'], session_id, data['line_num'])
     cursor.execute(query, values)
     conn.commit()
     line_id = cursor.lastrowid
     cursor.close()
     conn.close()
     return jsonify({'id': line_id})
-
 
 @app.route('/update-line/<int:line_id>', methods=['PUT'])
 def update_line(line_id):
@@ -98,8 +104,6 @@ def clear_lines():
     cursor.close()
     conn.close()
     return jsonify({'status': 'success'})
-
-
 
 @app.route('/get-lines', methods=['GET'])
 def get_lines():
