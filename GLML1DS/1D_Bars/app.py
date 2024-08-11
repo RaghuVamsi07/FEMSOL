@@ -30,18 +30,6 @@ def get_db_connection():
     conn = mysql.connector.connect(**db_config)
     return conn
 
-def is_point_on_line(x1, y1, x2, y2, x, y):
-    # Check if the point (x, y) is on the line (x1, y1) to (x2, y2)
-    try:
-        distance = abs((y2 - y1) * x - (x2 - x1) * y + x2 * y1 - y2 * x1) / ((y2 - y1) ** 2 + (x2 - x1) ** 2) ** 0.5
-        line_length = ((x2 - x1) ** 2 + (y2 - y1) ** 2) ** 0.5
-        point_to_start = ((x - x1) ** 2 + (y - y1) ** 2) ** 0.5
-        point_to_end = ((x - x2) ** 2 + (y - y2) ** 2) ** 0.5
-        return isclose(distance, 0, abs_tol=1e-5) and point_to_start <= line_length and point_to_end <= line_length
-    except Exception as e:
-        print(f"Error in is_point_on_line: {e}")
-        return False
-
 
 @app.route('/')
 def index():
@@ -152,39 +140,16 @@ def get_lines():
 @app.route('/save-force', methods=['POST'])
 def save_force():
     data = request.json
-    print('Received data from client:', data)  # Debug print
     session_id = request.cookies.get('session_id')
     
-    # Fetch the line's coordinates based on line_num and session_id
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    query = "SELECT x1, y1, x2, y2 FROM lines_table WHERE line_num=%s AND session_id=%s"
-    cursor.execute(query, (data['line_num'], session_id))
-    line_data = cursor.fetchone()
-
-    # Debug print the fetched line data
-    print('Fetched line data:', line_data)
-
-    if not line_data:
-        cursor.close()
-        conn.close()
-        return jsonify({'status': 'error', 'message': 'Line not found.'}), 400
-
-    x1, y1, x2, y2 = line_data
-
-    # Check if the point (x, y) is on the line
-    if not is_point_on_line(x1, y1, x2, y2, data['x'], data['y']):
-        print(f"The point ({data['x']}, {data['y']}) is outside the line.")
-        cursor.close()
-        conn.close()
-        return jsonify({'status': 'error', 'message': 'The point is outside the line.'}), 400
-
     # Insert force data into forces_table
-    query = """
-    INSERT INTO forces_table (line_num, force_num, x, y, fx, fy, session_id)
-    VALUES (%s, %s, %s, %s, %s, %s, %s)
-    """
     try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        query = """
+        INSERT INTO forces_table (line_num, force_num, x, y, fx, fy, session_id)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """
         cursor.execute(query, (
             data['line_num'], 
             data['force_num'], 
@@ -195,14 +160,35 @@ def save_force():
             session_id
         ))
         conn.commit()
+        cursor.close()
+        conn.close()
+        return jsonify({'status': 'success'})
     except Exception as e:
-        print(f"Failed to save force data: {e}")
+        print(f"Error: {e}")
         return jsonify({'status': 'error', 'message': 'Failed to save force data.'}), 500
-    finally:
+
+
+@app.route('/get-line/<int:line_num>', methods=['GET'])
+def get_line(line_num):
+    session_id = request.cookies.get('session_id')
+    
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        query = "SELECT x1, y1, x2, y2 FROM lines_table WHERE line_num=%s AND session_id=%s"
+        cursor.execute(query, (line_num, session_id))
+        line_data = cursor.fetchone()
         cursor.close()
         conn.close()
 
-    return jsonify({'status': 'success'})
+        if line_data:
+            return jsonify({'status': 'success', 'line_data': {'x1': line_data[0], 'y1': line_data[1], 'x2': line_data[2], 'y2': line_data[3]}})
+        else:
+            return jsonify({'status': 'error', 'message': 'Line not found.'}), 404
+    except Exception as e:
+        print(f"Error fetching line data: {e}")
+        return jsonify({'status': 'error', 'message': 'Failed to fetch line data.'}), 500
+
 
 
 if __name__ == "__main__":
