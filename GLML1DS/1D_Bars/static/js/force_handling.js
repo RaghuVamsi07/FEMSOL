@@ -11,9 +11,8 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const response = await fetch(`/get-line/${lineNum}`, { method: 'GET' });
             const result = await response.json();
-            console.log('Fetched line data:', result); // Debug print
             if (result.status === 'success') {
-                return result.line_data; // Assuming this returns {x1, y1, x2, y2}
+                return result.line_data; // Assume this returns {x1, y1, x2, y2}
             } else {
                 alert('Line not found.');
                 return null;
@@ -62,8 +61,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 x: x,
                 y: y
             };
-
-            console.log('Force data being sent to server:', forceData); // Debug print
 
             try {
                 const response = await fetch('/save-force', {
