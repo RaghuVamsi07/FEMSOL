@@ -137,53 +137,58 @@ def get_lines():
     return jsonify([{'id': row[0], 'x1': row[1], 'y1': row[2], 'x2': row[3], 'y2': row[4]} for row in lines])
 
 
+@app.route('/get-line/<int:line_num>', methods=['GET'])
+def get_line(line_num):
+    session_id = request.cookies.get('session_id')
+    
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        query = "SELECT x1, y1, x2, y2 FROM lines_table WHERE line_num=%s AND session_id=%s"
+        cursor.execute(query, (line_num, session_id))
+        line_data = cursor.fetchone()
+        
+        cursor.close()
+        conn.close()
+
+        if line_data:
+            return jsonify({'status': 'success', 'line_data': {'x1': line_data[0], 'y1': line_data[1], 'x2': line_data[2], 'y2': line_data[3]}})
+        else:
+            return jsonify({'status': 'error', 'message': 'Line not found.'}), 404
+    except Exception as e:
+        print(f"Error fetching line data: {e}")
+        return jsonify({'status': 'error', 'message': 'Failed to fetch line data.'}), 500
 
 @app.route('/save-force', methods=['POST'])
 def save_force():
     data = request.json
-    session_id = request.cookies.get('session_id')  # Ensure session_id is retrieved correctly
-
-    # Fetch the line's coordinates based on line_num and session_id
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    query = "SELECT x1, y1, x2, y2 FROM lines_table WHERE line_num=%s AND session_id=%s"
-    cursor.execute(query, (data['line_num'], session_id))
-    line_data = cursor.fetchone()
-
-    if not line_data:
-        cursor.close()
-        conn.close()
-        return jsonify({'status': 'error', 'message': 'Line not found.'}), 400
-
-    x1, y1, x2, y2 = line_data
-
-    # Check if the point (x, y) is on the line
-    if not is_point_on_line(x1, y1, x2, y2, data['x'], data['y']):
-        cursor.close()
-        conn.close()
-        return jsonify({'status': 'error', 'message': 'The point is outside the line.'}), 400
-
+    session_id = request.cookies.get('session_id')
+    
     # Insert force data into forces_table
-    query = """
-    INSERT INTO forces_table (line_num, force_num, x, y, fx, fy, session_id)
-    VALUES (%s, %s, %s, %s, %s, %s, %s)
-    """
-    values = (
-        data['line_num'], 
-        data['force_num'], 
-        data['x'], 
-        data['y'], 
-        data['fx'], 
-        data['fy'], 
-        session_id
-    )
-    cursor.execute(query, values)
-    conn.commit()
-    force_id = cursor.lastrowid
-    cursor.close()
-    conn.close()
-
-    return jsonify({'status': 'success', 'force_id': force_id})
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        query = """
+        INSERT INTO forces_table (line_num, force_num, x, y, fx, fy, session_id)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """
+        cursor.execute(query, (
+            data['line_num'], 
+            data['force_num'], 
+            data['x'], 
+            data['y'], 
+            data['fx'], 
+            data['fy'], 
+            session_id
+        ))
+        conn.commit()
+        
+        cursor.close()
+        conn.close()
+        return jsonify({'status': 'success'})
+    except Exception as e:
+        print(f"Error: {e}")  # This will help you debug any issues in the logs
+        return jsonify({'status': 'error', 'message': 'Failed to save force data.'}), 500
 
 
 if __name__ == "__main__":
