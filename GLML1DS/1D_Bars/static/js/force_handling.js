@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const updateForceBtn = document.getElementById('updateForce');
     const deleteForceBtn = document.getElementById('deleteForce');
     const forceSelect = document.getElementById('forceSelect');
+    const clearStorageBtn = document.getElementById('clearStorage');
 
     // Function to fetch line data based on line number
     async function fetchLineData(lineNum) {
