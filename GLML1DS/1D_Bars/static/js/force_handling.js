@@ -181,6 +181,32 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    document.addEventListener('DOMContentLoaded', () => {
+    const clearStorageBtn = document.getElementById('clearStorage');
+
+    clearStorageBtn.addEventListener('click', async () => {
+        try {
+            const response = await fetch('/clear-storage', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            const result = await response.json();
+
+            if (result.status === 'success') {
+                alert('Storage cleared successfully.');
+            } else {
+                alert(result.message || 'Failed to clear storage.');
+            }
+        } catch (error) {
+            console.error('Error clearing storage:', error);
+            alert('An error occurred while clearing storage.');
+        }
+    });
+});
+
+
     // Fetch and populate the dropdown with forces
     async function loadForces() {
         try {
