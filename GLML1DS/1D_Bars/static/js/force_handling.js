@@ -181,9 +181,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    document.addEventListener('DOMContentLoaded', () => {
-    const clearStorageBtn = document.getElementById('clearStorage');
-
     clearStorageBtn.addEventListener('click', async () => {
         try {
             const response = await fetch('/clear-storage', {
@@ -196,6 +193,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (result.status === 'success') {
                 alert('Storage cleared successfully.');
+                loadForces(); // Reload forces to update the dropdown
+                lineNumInput.value = '';
+                forceNumInput.value = '';
+                fxInput.value = '';
+                fyInput.value = '';
+                forceXInput.value = '';
+                forceYInput.value = '';
+                forceSelect.innerHTML = '<option value="">Select a Force</option>';
             } else {
                 alert(result.message || 'Failed to clear storage.');
             }
@@ -204,9 +209,10 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('An error occurred while clearing storage.');
         }
     });
-});
 
 
+
+    
     // Fetch and populate the dropdown with forces
     async function loadForces() {
         try {
