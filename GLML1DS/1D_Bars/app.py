@@ -293,6 +293,28 @@ def delete_force(force_id):
         print(f"Error deleting force data: {e}")
         return jsonify({'status': 'error', 'message': 'Failed to delete force data.'}), 500
 
+@app.route('/clear-storage', methods=['POST'])
+def clear_storage():
+    session_id = request.cookies.get('session_id')
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Clear lines_table
+        query_lines = "DELETE FROM lines_table WHERE session_id=%s"
+        cursor.execute(query_lines, (session_id,))
+
+        # Clear forces_table
+        query_forces = "DELETE FROM forces_table WHERE session_id=%s"
+        cursor.execute(query_forces, (session_id,))
+
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return jsonify({'status': 'success'})
+    except Exception as e:
+        print(f"Error clearing storage: {e}")
+        return jsonify({'status': 'error', 'message': 'Failed to clear storage.'}), 500
 
 
 if __name__ == "__main__":
