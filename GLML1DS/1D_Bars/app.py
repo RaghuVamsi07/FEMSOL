@@ -191,5 +191,109 @@ def save_force():
         return jsonify({'status': 'error', 'message': 'Failed to save force data.'}), 500
 
 
+@app.route('/get-forces', methods=['GET'])
+def get_forces():
+    session_id = request.cookies.get('session_id')
+    
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        query = "SELECT force_id, line_num, force_num FROM forces_table WHERE session_id=%s"
+        cursor.execute(query, (session_id,))
+        forces = cursor.fetchall()
+        
+        cursor.close()
+        conn.close()
+
+        forces_list = [{'force_id': force[0], 'line_num': force[1], 'force_num': force[2]} for force in forces]
+        return jsonify({'status': 'success', 'forces': forces_list})
+    except Exception as e:
+        print(f"Error fetching forces: {e}")
+        return jsonify({'status': 'error', 'message': 'Failed to fetch forces.'}), 500
+
+
+@app.route('/get-force/<int:force_id>', methods=['GET'])
+def get_force(force_id):
+    session_id = request.cookies.get('session_id')
+    
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        query = "SELECT line_num, force_num, fx, fy, x, y FROM forces_table WHERE force_id=%s AND session_id=%s"
+        cursor.execute(query, (force_id, session_id))
+        force_data = cursor.fetchone()
+        
+        cursor.close()
+        conn.close()
+
+        if force_data:
+            return jsonify({'status': 'success', 'force_data': {
+                'line_num': force_data[0],
+                'force_num': force_data[1],
+                'fx': force_data[2],
+                'fy': force_data[3],
+                'x': force_data[4],
+                'y': force_data[5]
+            }})
+        else:
+            return jsonify({'status': 'error', 'message': 'Force not found.'}), 404
+    except Exception as e:
+        print(f"Error fetching force data: {e}")
+        return jsonify({'status': 'error', 'message': 'Failed to fetch force data.'}), 500
+
+
+@app.route('/update-force/<int:force_id>', methods=['PUT'])
+def update_force(force_id):
+    data = request.json
+    session_id = request.cookies.get('session_id')
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        query = """
+        UPDATE forces_table
+        SET line_num=%s, force_num=%s, fx=%s, fy=%s, x=%s, y=%s
+        WHERE force_id=%s AND session_id=%s
+        """
+        cursor.execute(query, (
+            data['line_num'], 
+            data['force_num'], 
+            data['fx'], 
+            data['fy'], 
+            data['x'], 
+            data['y'], 
+            force_id,
+            session_id
+        ))
+        conn.commit()
+        
+        cursor.close()
+        conn.close()
+        return jsonify({'status': 'success'})
+    except Exception as e:
+        print(f"Error updating force data: {e}")
+        return jsonify({'status': 'error', 'message': 'Failed to update force data.'}), 500
+
+
+@app.route('/delete-force/<int:force_id>', methods=['DELETE'])
+def delete_force(force_id):
+    session_id = request.cookies.get('session_id')
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        query = "DELETE FROM forces_table WHERE force_id=%s AND session_id=%s"
+        cursor.execute(query, (force_id, session_id))
+        conn.commit()
+        
+        cursor.close()
+        conn.close()
+        return jsonify({'status': 'success'})
+    except Exception as e:
+        print(f"Error deleting force data: {e}")
+        return jsonify({'status': 'error', 'message': 'Failed to delete force data.'}), 500
+
+
+
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000, debug=True)
