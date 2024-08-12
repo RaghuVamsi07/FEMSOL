@@ -1,20 +1,20 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const lineNumInput = document.getElementById('lineNum');
-    const forceNumInput = document.getElementById('forceNum');
+    const lineNumDistInput = document.getElementById('lineNumDist');
+    const forceNumDistInput = document.getElementById('forceNumDist');
     const distributiveForceInput = document.getElementById('distributiveForce');
-    const x1DistInput = document.getElementById('x1Distributive');
-    const y1DistInput = document.getElementById('y1Distributive');
-    const x2DistInput = document.getElementById('x2Distributive');
-    const y2DistInput = document.getElementById('y2Distributive');
+    const x1DistInput = document.getElementById('x1Dist');
+    const y1DistInput = document.getElementById('y1Dist');
+    const x2DistInput = document.getElementById('x2Dist');
+    const y2DistInput = document.getElementById('y2Dist');
     const addDistributiveForceBtn = document.getElementById('addDistributiveForce');
     const updateDistributiveForceBtn = document.getElementById('updateDistributiveForce');
     const deleteDistributiveForceBtn = document.getElementById('deleteDistributiveForce');
-    const forceSelect = document.getElementById('forceSelect');
+    const distributiveForceSelect = document.getElementById('distributiveForceSelect');
 
     // Function to fetch line data based on line number
-    async function fetchLineData(lineNum) {
+    async function fetchLineData(lineNumDist) {
         try {
-            const response = await fetch(`/get-line/${lineNum}`, { method: 'GET' });
+            const response = await fetch(`/get-line/${lineNumDist}`, { method: 'GET' });
             const result = await response.json();
             if (result.status === 'success') {
                 return result.line_data; // Returns {x1, y1, x2, y2} from lines_table
@@ -39,20 +39,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Adding a distributive force
     addDistributiveForceBtn.addEventListener('click', async () => {
-        const lineNum = parseInt(lineNumInput.value);
-        const forceNum = parseInt(forceNumInput.value);
+        const lineNumDist = parseInt(lineNumDistInput.value);
+        const forceNumDist = parseInt(forceNumDistInput.value);
         const forceDist = distributiveForceInput.value.trim();  // This is a string
         const x1Dist = parseFloat(x1DistInput.value);
         const y1Dist = parseFloat(y1DistInput.value);
         const x2Dist = parseFloat(x2DistInput.value);
         const y2Dist = parseFloat(y2DistInput.value);
 
-        if (isNaN(lineNum) || isNaN(forceNum) || isNaN(x1Dist) || isNaN(y1Dist) || isNaN(x2Dist) || isNaN(y2Dist) || !forceDist) {
+        if (isNaN(lineNumDist) || isNaN(forceNumDist) || isNaN(x1Dist) || isNaN(y1Dist) || isNaN(x2Dist) || isNaN(y2Dist) || !forceDist) {
             alert("Please enter valid values for all fields.");
             return;
         }
 
-        const lineData = await fetchLineData(lineNum);
+        const lineData = await fetchLineData(lineNumDist);
         if (lineData) {
             const { x1, y1, x2, y2 } = lineData;
 
@@ -62,8 +62,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const forceData = {
-                line_num: lineNum,
-                force_num: forceNum,
+                line_num: lineNumDist,
+                force_num: forceNumDist,
                 force_dist: forceDist,
                 x1: x1Dist,
                 y1: y1Dist,
@@ -83,7 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (result.status === 'success') {
                     alert("Distributive force data saved successfully.");
-                    loadForces(); // Reload forces to update the dropdown
+                    loadDistributiveForces(); // Reload forces to update the dropdown
                 } else {
                     alert(result.message || 'Failed to save distributive force data.');
                 }
@@ -96,21 +96,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Updating a distributive force
     updateDistributiveForceBtn.addEventListener('click', async () => {
-        const forceId = forceSelect.value;
+        const forceId = distributiveForceSelect.value;
 
         if (!forceId) {
             alert('Please select a force to update.');
             return;
         }
 
-        const lineNum = parseInt(lineNumInput.value);
+        const lineNumDist = parseInt(lineNumDistInput.value);
         const forceDist = distributiveForceInput.value.trim();
         const x1Dist = parseFloat(x1DistInput.value);
         const y1Dist = parseFloat(y1DistInput.value);
         const x2Dist = parseFloat(x2DistInput.value);
         const y2Dist = parseFloat(y2DistInput.value);
 
-        const lineData = await fetchLineData(lineNum);
+        const lineData = await fetchLineData(lineNumDist);
         if (lineData) {
             const { x1, y1, x2, y2 } = lineData;
 
@@ -120,8 +120,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const updatedForceData = {
-                line_num: lineNum,
-                force_num: parseInt(forceNumInput.value),
+                line_num: lineNumDist,
+                force_num: parseInt(forceNumDistInput.value),
                 force_dist: forceDist,
                 x1: x1Dist,
                 y1: y1Dist,
@@ -141,7 +141,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (result.status === 'success') {
                     alert('Distributive force updated successfully.');
-                    loadForces(); // Reload forces to update the dropdown
+                    loadDistributiveForces(); // Reload forces to update the dropdown
                 } else {
                     alert('Failed to update distributive force.');
                 }
@@ -154,7 +154,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Deleting a distributive force
     deleteDistributiveForceBtn.addEventListener('click', async () => {
-        const forceId = forceSelect.value;
+        const forceId = distributiveForceSelect.value;
 
         if (!forceId) {
             alert('Please select a force to delete.');
@@ -169,10 +169,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (result.status === 'success') {
                 alert('Distributive force deleted successfully.');
-                loadForces(); // Reload forces to update the dropdown
-                forceSelect.value = '';
-                lineNumInput.value = '';
-                forceNumInput.value = '';
+                loadDistributiveForces(); // Reload forces to update the dropdown
+                distributiveForceSelect.value = '';
+                lineNumDistInput.value = '';
+                forceNumDistInput.value = '';
                 distributiveForceInput.value = '';
                 x1DistInput.value = '';
                 y1DistInput.value = '';
@@ -188,18 +188,18 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Fetch and populate the dropdown with distributive forces
-    async function loadForces() {
+    async function loadDistributiveForces() {
         try {
             const response = await fetch('/get-distributive-forces');
             const data = await response.json();
 
             if (data.status === 'success') {
-                forceSelect.innerHTML = '<option value="">Select a Force</option>';
+                distributiveForceSelect.innerHTML = '<option value="">Select a Force</option>';
                 data.forces.forEach(force => {
                     const option = document.createElement('option');
                     option.value = force.dist_for_id;
                     option.textContent = `Dist Force ${force.force_num} on Line ${force.line_num}`;
-                    forceSelect.appendChild(option);
+                    distributiveForceSelect.appendChild(option);
                 });
             } else {
                 alert('Failed to load distributive forces.');
@@ -211,8 +211,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // When a force is selected, load its data into the inputs
-    forceSelect.addEventListener('change', async () => {
-        const forceId = forceSelect.value;
+    distributiveForceSelect.addEventListener('change', async () => {
+        const forceId = distributiveForceSelect.value;
 
         if (forceId) {
             try {
@@ -220,8 +220,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await response.json();
 
                 if (data.status === 'success') {
-                    lineNumInput.value = data.force_data.line_num;
-                    forceNumInput.value = data.force_data.force_num;
+                    lineNumDistInput.value = data.force_data.line_num;
+                    forceNumDistInput.value = data.force_data.force_num;
                     distributiveForceInput.value = data.force_data.force_dist;
                     x1DistInput.value = data.force_data.x1;
                     y1DistInput.value = data.force_data.y1;
@@ -238,5 +238,5 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Load distributive forces on page load
-    loadForces();
+    loadDistributiveForces();
 });
