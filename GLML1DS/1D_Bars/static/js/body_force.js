@@ -3,28 +3,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     let lines = [];
     const sessionID = getCookie('session_id');
 
-    // Fetch lines from the server
-    async function fetchLines() {
-        try {
-            const response = await fetch('/get-lines', {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'session_id': sessionID
-                }
-            });
-            const result = await response.json();
-            if (result.status === 'success') {
-                lines = result.lines;
-                updateBodyLineSelect();
-            } else {
-                console.error('Failed to load lines:', result.message);
-            }
-        } catch (error) {
-            console.error('Error loading lines:', error);
-        }
-    }
-
+   
     // Function to populate the line selection dropdown
     function updateBodyLineSelect() {
         lineSelectBody.innerHTML = '<option value="">Select a line</option>';
@@ -48,8 +27,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         ctx.stroke();
     }
 
-    // Fetch and populate the lines on page load
-    await fetchLines();
+
 
     // Highlight the selected line when a line is chosen from the dropdown
     lineSelectBody.addEventListener('change', () => {
