@@ -470,9 +470,6 @@ def save_body_force():
     session_id = request.cookies.get('session_id')
 
     try:
-        # Evaluate the area expression if it's mathematical
-        area = sympify(data['area']).evalf()
-
         conn = get_db_connection()
         cursor = conn.cursor()
         query = """
@@ -483,7 +480,7 @@ def save_body_force():
             data['line_num'],
             data['dens_num'],
             data['dens_val'],
-            area,  # Storing evaluated area
+            data['area'],
             data['E'],
             data['x_bf1'],
             data['y_bf1'],
@@ -499,6 +496,7 @@ def save_body_force():
         print(f"Error: {e}")
         return jsonify({'status': 'error', 'message': 'Failed to save body force data.'}), 500
 
+
 # Get all body forces for the session
 @app.route('/get-body-forces', methods=['GET'])
 def get_body_forces():
@@ -509,40 +507,41 @@ def get_body_forces():
         cursor = conn.cursor()
         query = "SELECT body_for_id, line_num, dens_num FROM body_forces_table WHERE session_id=%s"
         cursor.execute(query, (session_id,))
-        body_forces = cursor.fetchall()
+        forces = cursor.fetchall()
         cursor.close()
         conn.close()
 
-        return jsonify({'status': 'success', 'body_forces': [{'body_for_id': f[0], 'line_num': f[1], 'dens_num': f[2]} for f in body_forces]})
+        return jsonify({'status': 'success', 'forces': [{'body_for_id': f[0], 'line_num': f[1], 'dens_num': f[2]} for f in forces]})
     except Exception as e:
         print(f"Error: {e}")
         return jsonify({'status': 'error', 'message': 'Failed to fetch body forces.'}), 500
 
+
 # Get a single body force by ID
-@app.route('/get-body-force/<int:body_force_id>', methods=['GET'])
-def get_body_force(body_force_id):
+@app.route('/get-body-force/<int:force_id>', methods=['GET'])
+def get_body_force(force_id):
     session_id = request.cookies.get('session_id')
 
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
         query = "SELECT line_num, dens_num, dens_val, area, E, x_bf1, y_bf1, x_bf2, y_bf2 FROM body_forces_table WHERE body_for_id=%s AND session_id=%s"
-        cursor.execute(query, (body_force_id, session_id))
-        body_force_data = cursor.fetchone()
+        cursor.execute(query, (force_id, session_id))
+        force_data = cursor.fetchone()
         cursor.close()
         conn.close()
 
-        if body_force_data:
-            return jsonify({'status': 'success', 'body_force_data': {
-                'line_num': body_force_data[0],
-                'dens_num': body_force_data[1],
-                'dens_val': body_force_data[2],
-                'area': body_force_data[3],
-                'E': body_force_data[4],
-                'x_bf1': body_force_data[5],
-                'y_bf1': body_force_data[6],
-                'x_bf2': body_force_data[7],
-                'y_bf2': body_force_data[8]
+        if force_data:
+            return jsonify({'status': 'success', 'force_data': {
+                'line_num': force_data[0],
+                'dens_num': force_data[1],
+                'dens_val': force_data[2],
+                'area': force_data[3],
+                'E': force_data[4],
+                'x_bf1': force_data[5],
+                'y_bf1': force_data[6],
+                'x_bf2': force_data[7],
+                'y_bf2': force_data[8]
             }})
         else:
             return jsonify({'status': 'error', 'message': 'Body force not found.'}), 404
@@ -550,16 +549,14 @@ def get_body_force(body_force_id):
         print(f"Error: {e}")
         return jsonify({'status': 'error', 'message': 'Failed to fetch body force data.'}), 500
 
+
 # Update a body force
-@app.route('/update-body-force/<int:body_force_id>', methods=['PUT'])
-def update_body_force(body_force_id):
+@app.route('/update-body-force/<int:force_id>', methods=['PUT'])
+def update_body_force(force_id):
     data = request.json
     session_id = request.cookies.get('session_id')
 
     try:
-        # Evaluate the area expression if it's mathematical
-        area = sympify(data['area']).evalf()
-
         conn = get_db_connection()
         cursor = conn.cursor()
         query = """
@@ -571,13 +568,13 @@ def update_body_force(body_force_id):
             data['line_num'],
             data['dens_num'],
             data['dens_val'],
-            area,  # Storing evaluated area
+            data['area'],
             data['E'],
             data['x_bf1'],
             data['y_bf1'],
             data['x_bf2'],
             data['y_bf2'],
-            body_force_id,
+            force_id,
             session_id
         ))
         conn.commit()
@@ -588,16 +585,17 @@ def update_body_force(body_force_id):
         print(f"Error: {e}")
         return jsonify({'status': 'error', 'message': 'Failed to update body force data.'}), 500
 
+
 # Delete a body force
-@app.route('/delete-body-force/<int:body_force_id>', methods=['DELETE'])
-def delete_body_force(body_force_id):
+@app.route('/delete-body-force/<int:force_id>', methods=['DELETE'])
+def delete_body_force(force_id):
     session_id = request.cookies.get('session_id')
 
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
         query = "DELETE FROM body_forces_table WHERE body_for_id=%s AND session_id=%s"
-        cursor.execute(query, (body_force_id, session_id))
+        cursor.execute(query, (force_id, session_id))
         conn.commit()
         cursor.close()
         conn.close()
@@ -605,7 +603,6 @@ def delete_body_force(body_force_id):
     except Exception as e:
         print(f"Error: {e}")
         return jsonify({'status': 'error', 'message': 'Failed to delete body force.'}), 500
-
 
 
 
