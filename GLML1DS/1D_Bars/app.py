@@ -317,5 +317,140 @@ def clear_storage():
         return jsonify({'status': 'error', 'message': 'Failed to clear storage.'}), 500
 
 
+@app.route('/save-distributive-force', methods=['POST'])
+def save_distributive_force():
+    data = request.json
+    session_id = request.cookies.get('session_id')
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        query = """
+        INSERT INTO dist_forces_table (line_num, force_num, force_dist, x1, y1, x2, y2, session_id)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        """
+        cursor.execute(query, (
+            data['line_num'],
+            data['force_num'],
+            data['force_dist'],
+            data['x1'],
+            data['y1'],
+            data['x2'],
+            data['y2'],
+            session_id
+        ))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return jsonify({'status': 'success'})
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({'status': 'error', 'message': 'Failed to save distributive force data.'}), 500
+
+
+@app.route('/get-distributive-forces', methods=['GET'])
+def get_distributive_forces():
+    session_id = request.cookies.get('session_id')
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        query = "SELECT dist_for_id, line_num, force_num FROM dist_forces_table WHERE session_id=%s"
+        cursor.execute(query, (session_id,))
+        forces = cursor.fetchall()
+        cursor.close()
+        conn.close()
+
+        return jsonify({'status': 'success', 'forces': [{'dist_for_id': f[0], 'line_num': f[1], 'force_num': f[2]} for f in forces]})
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({'status': 'error', 'message': 'Failed to fetch distributive forces.'}), 500
+
+
+@app.route('/get-distributive-force/<int:force_id>', methods=['GET'])
+def get_distributive_force(force_id):
+    session_id = request.cookies.get('session_id')
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        query = "SELECT line_num, force_num, force_dist, x1, y1, x2, y2 FROM dist_forces_table WHERE dist_for_id=%s AND session_id=%s"
+        cursor.execute(query, (force_id, session_id))
+        force_data = cursor.fetchone()
+        cursor.close()
+        conn.close()
+
+        if force_data:
+            return jsonify({'status': 'success', 'force_data': {
+                'line_num': force_data[0],
+                'force_num': force_data[1],
+                'force_dist': force_data[2],
+                'x1': force_data[3],
+                'y1': force_data[4],
+                'x2': force_data[5],
+                'y2': force_data[6]
+            }})
+        else:
+            return jsonify({'status': 'error', 'message': 'Distributive force not found.'}), 404
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({'status': 'error', 'message': 'Failed to fetch distributive force data.'}), 500
+
+
+@app.route('/update-distributive-force/<int:force_id>', methods=['PUT'])
+def update_distributive_force(force_id):
+    data = request.json
+    session_id = request.cookies.get('session_id')
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        query = """
+        UPDATE dist_forces_table
+        SET line_num=%s, force_num=%s, force_dist=%s, x1=%s, y1=%s, x2=%s, y2=%s
+        WHERE dist_for_id=%s AND session_id=%s
+        """
+        cursor.execute(query, (
+            data['line_num'],
+            data['force_num'],
+            data['force_dist'],
+            data['x1'],
+            data['y1'],
+            data['x2'],
+            data['y2'],
+            force_id,
+            session_id
+        ))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return jsonify({'status': 'success'})
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({'status': 'error', 'message': 'Failed to update distributive force data.'}), 500
+
+
+@app.route('/delete-distributive-force/<int:force_id>', methods=['DELETE'])
+def delete_distributive_force(force_id):
+    session_id = request.cookies.get('session_id')
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        query = "DELETE FROM dist_forces_table WHERE dist_for_id=%s AND session_id=%s"
+        cursor.execute(query, (force_id, session_id))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return jsonify({'status': 'success'})
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({'status': 'error', 'message': 'Failed to delete distributive force.'}), 500
+
+
+
+
+
+
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000, debug=True)
