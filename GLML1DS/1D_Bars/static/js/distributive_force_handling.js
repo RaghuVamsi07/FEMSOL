@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Function to check if the point is on the line
+    // Function to check if the points are on the line
     function isPointOnLine(x1, y1, x2, y2, x, y) {
         const distance = Math.abs((y2 - y1) * x - (x2 - x1) * y + x2 * y1 - y2 * x1) / Math.sqrt((y2 - y1) ** 2 + (x2 - x1) ** 2);
         const lineLength = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
