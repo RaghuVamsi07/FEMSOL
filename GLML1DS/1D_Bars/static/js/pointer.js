@@ -7,7 +7,7 @@ const lineSelectForce = document.getElementById('lineSelectForce');
 const lineSelectDistributive = document.getElementById('lineSelectDistributive');
 const lineSelectBody = document.getElementById('lineSelectBody');
 const lineSelectThermal = document.getElementById('lineSelectThermal');
-const lineSelectMaterial = document.getElementById('lineSelectMaterial');
+
 
 const x1Input = document.getElementById('x1');
 const y1Input = document.getElementById('y1');
@@ -64,7 +64,7 @@ lineSelect.addEventListener('change', () => {
     });
 });
 
-const lineSelects = [lineSelectForce, lineSelectDistributive, lineSelectBody, lineSelectThermal, lineSelectMaterial];
+const lineSelects = [lineSelectForce, lineSelectDistributive, lineSelectBody, lineSelectThermal];
 lineSelects.forEach(select => {
     select.addEventListener('change', (e) => {
         const selectedIndex = e.target.value;
@@ -91,7 +91,6 @@ removeLineBtn.addEventListener('click', async () => {
             updateDistributiveLineSelect();
             updateBodyLineSelect();
             updateThermalLineSelect();
-            updateMaterialLineSelect();
             draw();
         } else {
             console.error('Failed to delete line');
@@ -176,16 +175,7 @@ function updateThermalLineSelect() {
     });
 }
 
-function updateMaterialLineSelect() {
-    const lineSelectMaterial = document.getElementById('lineSelectMaterial');
-    lineSelectMaterial.innerHTML = '<option value="">Select a line</option>';
-    (lines[sessionID] || []).forEach((line, index) => {
-        const option = document.createElement('option');
-        option.value = index;
-        option.textContent = `Line ${index + 1}`;
-        lineSelectMaterial.appendChild(option);
-    });
-}
+
 
 document.addEventListener('DOMContentLoaded', async () => {
     await loadLines();
@@ -194,5 +184,4 @@ document.addEventListener('DOMContentLoaded', async () => {
     updateDistributiveLineSelect();
     updateBodyLineSelect();
     updateThermalLineSelect();
-    updateMaterialLineSelect();
 });
