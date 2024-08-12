@@ -54,27 +54,30 @@
                 <label for="forceY">Y:</label>
                 <input type="number" id="forceY" name="forceY">
                 <button id="addForce">Add Force</button>
-            </div>
-            <button id="updateForce">Update Force</button>
-            <button id="deleteForce">Delete Force</button>
+                <button id="updateForce">Update Force</button>
+                <button id="deleteForce">Delete Force</button>
             
+            </div>
+            
+
             <div id="distributiveForcesSection">
                 <h3>Distributive Forces</h3>
                 <label for="lineSelectDistributive">Select Line:</label>
                 <select id="lineSelectDistributive">
                     <option value="">Select a line</option>
                 </select>
-               <!-- Line Number Input -->
-                <label for="lineNum">Line Number:</label>
-                <input type="number" id="lineNum" name="lineNum" placeholder="Enter Line Number">
+
+                <!-- Line Number Input -->
+                <label for="lineNumDist">Line Number:</label>
+                <input type="number" id="lineNumDist" name="lineNumDist" placeholder="Enter Line Number">
 
                 <!-- Force Number Input -->
-                <label for="forceNum">Force Number:</label>
-                <input type="number" id="forceNum" name="forceNum" placeholder="Enter Force Number">
+                <label for="forceNumDist">Force Number:</label>
+                <input type="number" id="forceNumDist" name="forceNumDist" placeholder="Enter Force Number">
 
-                 <!-- Dropdown for Selecting Existing Forces -->
+                <!-- Dropdown for Selecting Existing Forces -->
                 <select id="distributiveForceSelect">
-                <option value="">Select a Force</option>
+                    <option value="">Select a Force</option>
                 </select>
 
                 <!-- Force Distribution Input -->
@@ -82,20 +85,20 @@
                 <input type="text" id="distributiveForce" name="distributiveForce" placeholder="Enter force (e.g., 100 or 10*x)">
 
                 <!-- X1 Input -->
-                <label for="x1Distributive">X1:</label>
-                <input type="number" id="x1Distributive" name="x1Distributive">
+                <label for="x1Dist">X1:</label>
+                <input type="number" id="x1Dist" name="x1Dist">
 
                 <!-- Y1 Input -->
-                <label for="y1Distributive">Y1:</label>
-                <input type="number" id="y1Distributive" name="y1Distributive">
+                <label for="y1Dist">Y1:</label>
+                <input type="number" id="y1Dist" name="y1Dist">
 
                 <!-- X2 Input -->
-                <label for="x2Distributive">X2:</label>
-                <input type="number" id="x2Distributive" name="x2Distributive">
+                <label for="x2Dist">X2:</label>
+                <input type="number" id="x2Dist" name="x2Dist">
 
                 <!-- Y2 Input -->
-                <label for="y2Distributive">Y2:</label>
-                <input type="number" id="y2Distributive" name="y2Distributive">
+                <label for="y2Dist">Y2:</label>
+                <input type="number" id="y2Dist" name="y2Dist">
 
                 <!-- Add Distributive Force Button -->
                 <button id="addDistributiveForce">Add Distributive Force</button>
@@ -105,10 +108,22 @@
 
                 <!-- Delete Distributive Force Button -->
                 <button id="deleteDistributiveForce">Delete Distributive Force</button>
-
-               
             </div>
 
+            <div id="bodyForcesSection">
+                <h3>Body Forces</h3>
+                <label for="lineSelectBody">Select Line:</label>
+                <select id="lineSelectBody">
+                    <option value="">Select a line</option>
+                </select>
+                <label for="bodyForce">Force:</label>
+                <input type="text" id="bodyForce" name="bodyForce" placeholder="Enter force (e.g., 100 or 10*x)">
+                <label>X1: <input type="number" id="x1Body" /></label>
+                <label>Y1: <input type="number" id="y1Body" /></label>
+                <label>X2: <input type="number" id="x2Body" /></label>
+                <label>Y2: <input type="number" id="y2Body" /></label>
+                <button id="addBodyForce">Add Body Force</button>
+            </div>
 
             
             <div id="bodyForcesSection">
