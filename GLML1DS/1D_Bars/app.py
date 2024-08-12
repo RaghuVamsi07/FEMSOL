@@ -312,6 +312,30 @@ def clear_storage():
         query_dist_forces = "DELETE FROM dist_forces_table WHERE session_id=%s"
         cursor.execute(query_dist_forces, (session_id,))
 
+        # Clear density_forces_table (or body_forces_table)
+        query_body_forces = "DELETE FROM density_forces_table WHERE session_id=%s"
+        cursor.execute(query_body_forces, (session_id,))
+
+        conn.commit()
+
+        # Repopulate lines_table with the necessary data
+        # Example data
+        example_lines = [
+            {'x1': 0, 'y1': 0, 'x2': 10, 'y2': 0},
+            {'x1': 10, 'y1': 0, 'x2': 20, 'y2': 0},
+            # Add as many lines as needed
+        ]
+
+        for line in example_lines:
+            query_repopulate = """
+            INSERT INTO lines_table (x1, y1, x2, y2, session_id)
+            VALUES (%s, %s, %s, %s, %s)
+            """
+            cursor.execute(query_repopulate, (
+                line['x1'], line['y1'], line['x2'], line['y2'], session_id
+            ))
+        
+
         conn.commit()
         cursor.close()
         conn.close()
