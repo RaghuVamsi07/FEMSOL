@@ -308,6 +308,10 @@ def clear_storage():
         query_forces = "DELETE FROM forces_table WHERE session_id=%s"
         cursor.execute(query_forces, (session_id,))
 
+        # Clear dist_forces_table
+        query_dist_forces = "DELETE FROM dist_forces_table WHERE session_id=%s"
+        cursor.execute(query_dist_forces, (session_id,))
+
         conn.commit()
         cursor.close()
         conn.close()
