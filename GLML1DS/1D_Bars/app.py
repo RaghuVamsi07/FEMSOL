@@ -312,30 +312,11 @@ def clear_storage():
         query_dist_forces = "DELETE FROM dist_forces_table WHERE session_id=%s"
         cursor.execute(query_dist_forces, (session_id,))
 
-        # Clear density_forces_table (or body_forces_table)
-        query_body_forces = "DELETE FROM density_forces_table WHERE session_id=%s"
+        # Clear body forces table
+        query_body_forces = "DELETE FROM body_forces_table WHERE session_id=%s"
         cursor.execute(query_body_forces, (session_id,))
 
-        conn.commit()
-
-        # Repopulate lines_table with the necessary data
-        # Example data
-        example_lines = [
-            {'x1': 0, 'y1': 0, 'x2': 10, 'y2': 0},
-            {'x1': 10, 'y1': 0, 'x2': 20, 'y2': 0},
-            # Add as many lines as needed
-        ]
-
-        for line in example_lines:
-            query_repopulate = """
-            INSERT INTO lines_table (x1, y1, x2, y2, session_id)
-            VALUES (%s, %s, %s, %s, %s)
-            """
-            cursor.execute(query_repopulate, (
-                line['x1'], line['y1'], line['x2'], line['y2'], session_id
-            ))
-        
-
+       
         conn.commit()
         cursor.close()
         conn.close()
@@ -480,6 +461,150 @@ def delete_distributive_force(force_id):
     except Exception as e:
         print(f"Error: {e}")
         return jsonify({'status': 'error', 'message': 'Failed to delete distributive force.'}), 500
+
+
+# Save body force data
+@app.route('/save-body-force', methods=['POST'])
+def save_body_force():
+    data = request.json
+    session_id = request.cookies.get('session_id')
+
+    try:
+        # Evaluate the area expression if it's mathematical
+        area = sympify(data['area']).evalf()
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        query = """
+        INSERT INTO body_forces_table (line_num, dens_num, dens_val, area, E, x_bf1, y_bf1, x_bf2, y_bf2, session_id)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """
+        cursor.execute(query, (
+            data['line_num'],
+            data['dens_num'],
+            data['dens_val'],
+            area,  # Storing evaluated area
+            data['E'],
+            data['x_bf1'],
+            data['y_bf1'],
+            data['x_bf2'],
+            data['y_bf2'],
+            session_id
+        ))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return jsonify({'status': 'success'})
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({'status': 'error', 'message': 'Failed to save body force data.'}), 500
+
+# Get all body forces for the session
+@app.route('/get-body-forces', methods=['GET'])
+def get_body_forces():
+    session_id = request.cookies.get('session_id')
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        query = "SELECT body_for_id, line_num, dens_num FROM body_forces_table WHERE session_id=%s"
+        cursor.execute(query, (session_id,))
+        body_forces = cursor.fetchall()
+        cursor.close()
+        conn.close()
+
+        return jsonify({'status': 'success', 'body_forces': [{'body_for_id': f[0], 'line_num': f[1], 'dens_num': f[2]} for f in body_forces]})
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({'status': 'error', 'message': 'Failed to fetch body forces.'}), 500
+
+# Get a single body force by ID
+@app.route('/get-body-force/<int:body_force_id>', methods=['GET'])
+def get_body_force(body_force_id):
+    session_id = request.cookies.get('session_id')
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        query = "SELECT line_num, dens_num, dens_val, area, E, x_bf1, y_bf1, x_bf2, y_bf2 FROM body_forces_table WHERE body_for_id=%s AND session_id=%s"
+        cursor.execute(query, (body_force_id, session_id))
+        body_force_data = cursor.fetchone()
+        cursor.close()
+        conn.close()
+
+        if body_force_data:
+            return jsonify({'status': 'success', 'body_force_data': {
+                'line_num': body_force_data[0],
+                'dens_num': body_force_data[1],
+                'dens_val': body_force_data[2],
+                'area': body_force_data[3],
+                'E': body_force_data[4],
+                'x_bf1': body_force_data[5],
+                'y_bf1': body_force_data[6],
+                'x_bf2': body_force_data[7],
+                'y_bf2': body_force_data[8]
+            }})
+        else:
+            return jsonify({'status': 'error', 'message': 'Body force not found.'}), 404
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({'status': 'error', 'message': 'Failed to fetch body force data.'}), 500
+
+# Update a body force
+@app.route('/update-body-force/<int:body_force_id>', methods=['PUT'])
+def update_body_force(body_force_id):
+    data = request.json
+    session_id = request.cookies.get('session_id')
+
+    try:
+        # Evaluate the area expression if it's mathematical
+        area = sympify(data['area']).evalf()
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        query = """
+        UPDATE body_forces_table
+        SET line_num=%s, dens_num=%s, dens_val=%s, area=%s, E=%s, x_bf1=%s, y_bf1=%s, x_bf2=%s, y_bf2=%s
+        WHERE body_for_id=%s AND session_id=%s
+        """
+        cursor.execute(query, (
+            data['line_num'],
+            data['dens_num'],
+            data['dens_val'],
+            area,  # Storing evaluated area
+            data['E'],
+            data['x_bf1'],
+            data['y_bf1'],
+            data['x_bf2'],
+            data['y_bf2'],
+            body_force_id,
+            session_id
+        ))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return jsonify({'status': 'success'})
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({'status': 'error', 'message': 'Failed to update body force data.'}), 500
+
+# Delete a body force
+@app.route('/delete-body-force/<int:body_force_id>', methods=['DELETE'])
+def delete_body_force(body_force_id):
+    session_id = request.cookies.get('session_id')
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        query = "DELETE FROM body_forces_table WHERE body_for_id=%s AND session_id=%s"
+        cursor.execute(query, (body_force_id, session_id))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return jsonify({'status': 'success'})
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({'status': 'error', 'message': 'Failed to delete body force.'}), 500
 
 
 
