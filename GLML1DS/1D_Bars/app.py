@@ -496,7 +496,6 @@ def save_body_force():
         print(f"Error: {e}")
         return jsonify({'status': 'error', 'message': 'Failed to save body force data.'}), 500
 
-
 # Get all body forces for the session
 @app.route('/get-body-forces', methods=['GET'])
 def get_body_forces():
@@ -515,7 +514,6 @@ def get_body_forces():
     except Exception as e:
         print(f"Error: {e}")
         return jsonify({'status': 'error', 'message': 'Failed to fetch body forces.'}), 500
-
 
 # Get a single body force by ID
 @app.route('/get-body-force/<int:force_id>', methods=['GET'])
@@ -548,7 +546,6 @@ def get_body_force(force_id):
     except Exception as e:
         print(f"Error: {e}")
         return jsonify({'status': 'error', 'message': 'Failed to fetch body force data.'}), 500
-
 
 # Update a body force
 @app.route('/update-body-force/<int:force_id>', methods=['PUT'])
@@ -585,7 +582,6 @@ def update_body_force(force_id):
         print(f"Error: {e}")
         return jsonify({'status': 'error', 'message': 'Failed to update body force data.'}), 500
 
-
 # Delete a body force
 @app.route('/delete-body-force/<int:force_id>', methods=['DELETE'])
 def delete_body_force(force_id):
@@ -603,7 +599,6 @@ def delete_body_force(force_id):
     except Exception as e:
         print(f"Error: {e}")
         return jsonify({'status': 'error', 'message': 'Failed to delete body force.'}), 500
-
 
 
 
