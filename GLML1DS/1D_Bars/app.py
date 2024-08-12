@@ -317,6 +317,10 @@ def clear_storage():
         query_body_forces = "DELETE FROM body_forces_table WHERE session_id=%s"
         cursor.execute(query_body_forces, (session_id,))
 
+        # Clear body forces table
+        query_body_forces = "DELETE FROM thermal_loads_table WHERE session_id=%s"
+        cursor.execute(query_body_forces, (session_id,))
+
        
         conn.commit()
         cursor.close()
