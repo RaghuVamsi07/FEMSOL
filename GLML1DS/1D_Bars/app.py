@@ -317,6 +317,8 @@ def clear_storage():
         return jsonify({'status': 'error', 'message': 'Failed to clear storage.'}), 500
 
 
+
+# Save distributive force data
 @app.route('/save-distributive-force', methods=['POST'])
 def save_distributive_force():
     data = request.json
@@ -348,6 +350,7 @@ def save_distributive_force():
         return jsonify({'status': 'error', 'message': 'Failed to save distributive force data.'}), 500
 
 
+# Get all distributive forces for the session
 @app.route('/get-distributive-forces', methods=['GET'])
 def get_distributive_forces():
     session_id = request.cookies.get('session_id')
@@ -367,6 +370,7 @@ def get_distributive_forces():
         return jsonify({'status': 'error', 'message': 'Failed to fetch distributive forces.'}), 500
 
 
+# Get a single distributive force by ID
 @app.route('/get-distributive-force/<int:force_id>', methods=['GET'])
 def get_distributive_force(force_id):
     session_id = request.cookies.get('session_id')
@@ -397,6 +401,7 @@ def get_distributive_force(force_id):
         return jsonify({'status': 'error', 'message': 'Failed to fetch distributive force data.'}), 500
 
 
+# Update a distributive force
 @app.route('/update-distributive-force/<int:force_id>', methods=['PUT'])
 def update_distributive_force(force_id):
     data = request.json
@@ -430,6 +435,7 @@ def update_distributive_force(force_id):
         return jsonify({'status': 'error', 'message': 'Failed to update distributive force data.'}), 500
 
 
+# Delete a distributive force
 @app.route('/delete-distributive-force/<int:force_id>', methods=['DELETE'])
 def delete_distributive_force(force_id):
     session_id = request.cookies.get('session_id')
@@ -446,7 +452,6 @@ def delete_distributive_force(force_id):
     except Exception as e:
         print(f"Error: {e}")
         return jsonify({'status': 'error', 'message': 'Failed to delete distributive force.'}), 500
-
 
 
 
