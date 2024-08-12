@@ -122,7 +122,6 @@ canvas.addEventListener('mouseup', async () => {
             updateDistributiveLineSelect();
             updateBodyLineSelect();
             updateThermalLineSelect();
-            updateMaterialLineSelect();
         } catch (error) {
             console.error('Error adding line:', error);
         }
@@ -153,7 +152,6 @@ document.getElementById('clearStorage').addEventListener('click', async () => {
         updateDistributiveLineSelect();
         updateBodyLineSelect();
         updateThermalLineSelect();
-        updateMaterialLineSelect();
     } catch (error) {
         console.error('Error clearing lines:', error);
     }
@@ -224,16 +222,6 @@ function updateThermalLineSelect() {
     });
 }
 
-function updateMaterialLineSelect() {
-    const lineSelectMaterial = document.getElementById('lineSelectMaterial');
-    lineSelectMaterial.innerHTML = '<option value="">Select a line</option>';
-    (lines[sessionID] || []).forEach((line, index) => {
-        const option = document.createElement('option');
-        option.value = index;
-        option.textContent = `Line ${index + 1}`;
-        lineSelectMaterial.appendChild(option);
-    });
-}
 
 async function loadLines() {
     try {
@@ -253,7 +241,6 @@ async function loadLines() {
         updateDistributiveLineSelect();
         updateBodyLineSelect();
         updateThermalLineSelect();
-        updateMaterialLineSelect();
     } catch (error) {
         console.error('Error loading lines:', error);
     }
