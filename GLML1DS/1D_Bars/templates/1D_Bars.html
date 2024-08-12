@@ -111,35 +111,41 @@
             </div>
 
             <div id="bodyForcesSection">
-                <h3>Body Forces</h3>
-                <label for="lineSelectBody">Select Line:</label>
-                <select id="lineSelectBody">
-                    <option value="">Select a line</option>
-                </select>
-                <label for="bodyForce">Force:</label>
-                <input type="text" id="bodyForce" name="bodyForce" placeholder="Enter force (e.g., 100 or 10*x)">
-                <label>X1: <input type="number" id="x1Body" /></label>
-                <label>Y1: <input type="number" id="y1Body" /></label>
-                <label>X2: <input type="number" id="x2Body" /></label>
-                <label>Y2: <input type="number" id="y2Body" /></label>
-                <button id="addBodyForce">Add Body Force</button>
-            </div>
+            <h3>Body Forces (Density)</h3>
 
-            
-            <div id="bodyForcesSection">
-                <h3>Body Forces</h3>
                 <label for="lineSelectBody">Select Line:</label>
                 <select id="lineSelectBody">
                     <option value="">Select a line</option>
                 </select>
-                <label for="bodyForce">Force:</label>
-                <input type="text" id="bodyForce" name="bodyForce" placeholder="Enter force (e.g., 100 or 10*x)">
-                <label>X1: <input type="number" id="x1Body" /></label>
-                <label>Y1: <input type="number" id="y1Body" /></label>
-                <label>X2: <input type="number" id="x2Body" /></label>
-                <label>Y2: <input type="number" id="y2Body" /></label>
-                <button id="addBodyForce">Add Body Force</button>
-           </div>
+                <!-- Line Number Input -->
+                <label for="bodyLineNum">Line Number:</label>
+                <input type="number" id="bodyLineNum" name="bodyLineNum" placeholder="Enter Line Number">
+
+                <!-- Density Number Input -->
+                <label for="densityNum">Density Number:</label>
+                <input type="number" id="densityNum" name="densityNum" placeholder="Enter Density Number">
+
+                <!-- Density Value Input -->
+                <label for="densityVal">Density Value:</label>
+                <input type="number" id="densityVal" name="densityVal" placeholder="Enter Density Value">
+
+                <!-- Dropdown for Selecting Existing Densities -->
+                <label for="densitySelect">Select Density:</label>
+                <select id="densitySelect">
+                <option value="">Select a Density</option>
+                </select>
+
+                <!-- Add Density Button -->
+                <button id="addDensity">Add Density</button>
+
+                <!-- Update Density Button -->
+                <button id="updateDensity">Update Density</button>
+
+                <!-- Delete Density Button -->
+                <button id="deleteDensity">Delete Density</button>
+
+                </div>
+           
             <div id="thermalForcesSection">
                 <h3>Thermal Loads</h3>
                 <label for="lineSelectThermal">Select Line:</label>
