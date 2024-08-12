@@ -3,6 +3,8 @@ import mysql.connector
 import os
 from flask_session import Session
 from math import isclose
+import math
+from sympy import sympify
 import uuid
 
 app = Flask(__name__, static_folder='static')
