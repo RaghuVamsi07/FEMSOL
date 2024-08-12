@@ -72,6 +72,11 @@
                 <label for="forceNum">Force Number:</label>
                 <input type="number" id="forceNum" name="forceNum" placeholder="Enter Force Number">
 
+                 <!-- Dropdown for Selecting Existing Forces -->
+                <select id="distributiveForceSelect">
+                <option value="">Select a Force</option>
+                </select>
+
                 <!-- Force Distribution Input -->
                 <label for="distributiveForce">Force:</label>
                 <input type="text" id="distributiveForce" name="distributiveForce" placeholder="Enter force (e.g., 100 or 10*x)">
@@ -101,10 +106,7 @@
                 <!-- Delete Distributive Force Button -->
                 <button id="deleteDistributiveForce">Delete Distributive Force</button>
 
-                <!-- Dropdown for Selecting Existing Forces -->
-                <select id="distributiveForceSelect">
-                <option value="">Select a Force</option>
-                </select>
+               
             </div>
 
 
@@ -175,6 +177,7 @@
     <script src="{{ url_for('static', filename='js/material_analysis.js') }}"></script>
     <script src="{{ url_for('static', filename='js/workspace.js') }}"></script>
     <script src="{{ url_for('static', filename='js/force_handling.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/distributive_force_handling.js') }}"></script>
 
     
 
