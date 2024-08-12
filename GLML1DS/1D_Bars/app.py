@@ -601,6 +601,138 @@ def delete_body_force(force_id):
         return jsonify({'status': 'error', 'message': 'Failed to delete body force.'}), 500
 
 
+# Save thermal load data
+@app.route('/save-thermal-load', methods=['POST'])
+def save_thermal_load():
+    data = request.json
+    session_id = request.cookies.get('session_id')
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        query = """
+        INSERT INTO thermal_loads_table (line_num, alpha, T, xt1, yt1, xt2, yt2, session_id)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        """
+        cursor.execute(query, (
+            data['line_num'],
+            data['alpha'],
+            data['T'],
+            data['xt1'],
+            data['yt1'],
+            data['xt2'],
+            data['yt2'],
+            session_id
+        ))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return jsonify({'status': 'success'})
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({'status': 'error', 'message': 'Failed to save thermal load data.'}), 500
+
+# Get all thermal loads for the session
+@app.route('/get-thermal-loads', methods=['GET'])
+def get_thermal_loads():
+    session_id = request.cookies.get('session_id')
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        query = "SELECT thermal_load_id, line_num, alpha FROM thermal_loads_table WHERE session_id=%s"
+        cursor.execute(query, (session_id,))
+        forces = cursor.fetchall()
+        cursor.close()
+        conn.close()
+
+        return jsonify({'status': 'success', 'forces': [{'thermal_load_id': f[0], 'line_num': f[1], 'alpha': f[2]} for f in forces]})
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({'status': 'error', 'message': 'Failed to fetch thermal loads.'}), 500
+
+# Get a single thermal load by ID
+@app.route('/get-thermal-load/<int:force_id>', methods=['GET'])
+def get_thermal_load(force_id):
+    session_id = request.cookies.get('session_id')
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        query = "SELECT line_num, alpha, T, xt1, yt1, xt2, yt2 FROM thermal_loads_table WHERE thermal_load_id=%s AND session_id=%s"
+        cursor.execute(query, (force_id, session_id))
+        force_data = cursor.fetchone()
+        cursor.close()
+        conn.close()
+
+        if force_data:
+            return jsonify({'status': 'success', 'force_data': {
+                'line_num': force_data[0],
+                'alpha': force_data[1],
+                'T': force_data[2],
+                'xt1': force_data[3],
+                'yt1': force_data[4],
+                'xt2': force_data[5],
+                'yt2': force_data[6]
+            }})
+        else:
+            return jsonify({'status': 'error', 'message': 'Thermal load not found.'}), 404
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({'status': 'error', 'message': 'Failed to fetch thermal load data.'}), 500
+
+# Update a thermal load
+@app.route('/update-thermal-load/<int:force_id>', methods=['PUT'])
+def update_thermal_load(force_id):
+    data = request.json
+    session_id = request.cookies.get('session_id')
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        query = """
+        UPDATE thermal_loads_table
+        SET line_num=%s, alpha=%s, T=%s, xt1=%s, yt1=%s, xt2=%s, yt2=%s
+        WHERE thermal_load_id=%s AND session_id=%s
+        """
+        cursor.execute(query, (
+            data['line_num'],
+            data['alpha'],
+            data['T'],
+            data['xt1'],
+            data['yt1'],
+            data['xt2'],
+            data['yt2'],
+            force_id,
+            session_id
+        ))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return jsonify({'status': 'success'})
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({'status': 'error', 'message': 'Failed to update thermal load data.'}), 500
+
+# Delete a thermal load
+@app.route('/delete-thermal-load/<int:force_id>', methods=['DELETE'])
+def delete_thermal_load(force_id):
+    session_id = request.cookies.get('session_id')
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        query = "DELETE FROM thermal_loads_table WHERE thermal_load_id=%s AND session_id=%s"
+        cursor.execute(query, (force_id, session_id))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return jsonify({'status': 'success'})
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({'status': 'error', 'message': 'Failed to delete thermal load.'}), 500
+
+
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000, debug=True)
