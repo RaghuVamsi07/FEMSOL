@@ -64,14 +64,51 @@
                 <select id="lineSelectDistributive">
                     <option value="">Select a line</option>
                 </select>
+               <!-- Line Number Input -->
+                <label for="lineNum">Line Number:</label>
+                <input type="number" id="lineNum" name="lineNum" placeholder="Enter Line Number">
+
+                <!-- Force Number Input -->
+                <label for="forceNum">Force Number:</label>
+                <input type="number" id="forceNum" name="forceNum" placeholder="Enter Force Number">
+
+                <!-- Force Distribution Input -->
                 <label for="distributiveForce">Force:</label>
                 <input type="text" id="distributiveForce" name="distributiveForce" placeholder="Enter force (e.g., 100 or 10*x)">
-                <label>X1: <input type="number" id="x1Distributive" /></label>
-                <label>Y1: <input type="number" id="y1Distributive" /></label>
-                <label>X2: <input type="number" id="x2Distributive" /></label>
-                <label>Y2: <input type="number" id="y2Distributive" /></label>
+
+                <!-- X1 Input -->
+                <label for="x1Distributive">X1:</label>
+                <input type="number" id="x1Distributive" name="x1Distributive">
+
+                <!-- Y1 Input -->
+                <label for="y1Distributive">Y1:</label>
+                <input type="number" id="y1Distributive" name="y1Distributive">
+
+                <!-- X2 Input -->
+                <label for="x2Distributive">X2:</label>
+                <input type="number" id="x2Distributive" name="x2Distributive">
+
+                <!-- Y2 Input -->
+                <label for="y2Distributive">Y2:</label>
+                <input type="number" id="y2Distributive" name="y2Distributive">
+
+                <!-- Add Distributive Force Button -->
                 <button id="addDistributiveForce">Add Distributive Force</button>
+
+                <!-- Update Distributive Force Button -->
+                <button id="updateDistributiveForce">Update Distributive Force</button>
+
+                <!-- Delete Distributive Force Button -->
+                <button id="deleteDistributiveForce">Delete Distributive Force</button>
+
+                <!-- Dropdown for Selecting Existing Forces -->
+                <select id="distributiveForceSelect">
+                <option value="">Select a Force</option>
+                </select>
             </div>
+
+
+            
             <div id="bodyForcesSection">
                 <h3>Body Forces</h3>
                 <label for="lineSelectBody">Select Line:</label>
