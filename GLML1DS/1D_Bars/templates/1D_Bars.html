@@ -117,33 +117,57 @@
                 <select id="lineSelectBody">
                     <option value="">Select a line</option>
                 </select>
-                <!-- Line Number Input -->
-                <label for="bodyLineNum">Line Number:</label>
-                <input type="number" id="bodyLineNum" name="bodyLineNum" placeholder="Enter Line Number">
 
-                <!-- Density Number Input -->
-                <label for="densityNum">Density Number:</label>
-                <input type="number" id="densityNum" name="densityNum" placeholder="Enter Density Number">
+            <!-- Line Number Input -->
+            <label for="bodyLineNum">Line Number:</label>
+            <input type="number" id="bodyLineNum" name="bodyLineNum" placeholder="Enter Line Number">
 
-                <!-- Density Value Input -->
-                <label for="densityVal">Density Value:</label>
-                <input type="number" id="densityVal" name="densityVal" placeholder="Enter Density Value">
+            <!-- Density Number Input -->
+            <label for="densityNum">Density Number:</label>
+            <input type="number" id="densityNum" name="densityNum" placeholder="Enter Density Number">
 
-                <!-- Dropdown for Selecting Existing Densities -->
-                <label for="densitySelect">Select Density:</label>
-                <select id="densitySelect">
-                <option value="">Select a Density</option>
-                </select>
+             <!-- Dropdown for Selecting Existing Body Forces -->
+            <select id="bodyForceSelect">
+                <option value="">Select a Body Force</option>
+            </select>
 
-                <!-- Add Density Button -->
-                <button id="addDensity">Add Density</button>
+            <!-- Density Value Input -->
+            <label for="densityVal">Density Value:</label>
+            <input type="number" id="densityVal" name="densityVal" placeholder="Enter Density Value">
 
-                <!-- Update Density Button -->
-                <button id="updateDensity">Update Density</button>
+            <!-- Area Input -->
+            <label for="area">Area (A):</label>
+            <input type="text" id="area" name="area" placeholder="Enter area (e.g., 100 or 10*x)">
 
-                <!-- Delete Density Button -->
-                <button id="deleteDensity">Delete Density</button>
+            <!-- Young's Modulus Input -->
+            <label for="youngsModulus">Young's Modulus (E):</label>
+            <input type="number" id="youngsModulus" name="youngsModulus" placeholder="Enter Young's Modulus (E)">
 
+            <!-- X1 Body Force Input -->
+            <label for="x_bf1">X1:</label>
+            <input type="number" id="x_bf1" name="x_bf1">
+
+            <!-- Y1 Body Force Input -->
+            <label for="y_bf1">Y1:</label>
+            <input type="number" id="y_bf1" name="y_bf1">
+
+            <!-- X2 Body Force Input -->
+            <label for="x_bf2">X2:</label>
+            <input type="number" id="x_bf2" name="x_bf2">
+
+            <!-- Y2 Body Force Input -->
+            <label for="y_bf2">Y2:</label>
+            <input type="number" id="y_bf2" name="y_bf2">
+
+            <!-- Add Body Force Button -->
+            <button id="addBodyForce">Add Body Force</button>
+
+            <!-- Update Body Force Button -->
+            <button id="updateBodyForce">Update Body Force</button>
+
+            <!-- Delete Body Force Button -->
+            <button id="deleteBodyForce">Delete Body Force</button>
+                
                 </div>
            
             <div id="thermalForcesSection">
