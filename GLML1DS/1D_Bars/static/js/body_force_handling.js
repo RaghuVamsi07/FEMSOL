@@ -200,28 +200,27 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Fetch and populate the dropdown with body forces
     async function loadBodyForces() {
-        try {
-            const response = await fetch('/get-body-forces');
-            const data = await response.json();
+    try {
+        const response = await fetch('/get-body-forces');
+        const data = await response.json();
 
-            if (data.status === 'success') {
-                bodyForceSelect.innerHTML = '<option value="">Select a Body Force</option>';
-                data.body_forces.forEach(force => {
-                    const option = document.createElement('option');
-                    option.value = force.body_for_id;
-                    option.textContent = `Body Force ${force.dens_num} on Line ${force.line_num}`;
-                    bodyForceSelect.appendChild(option);
-                });
-            } else {
-                alert('Failed to load body forces.');
-            }
-        } catch (error) {
-            console.error('Error loading body forces:', error);
-            alert('An error occurred while loading body forces.');
+        if (data.status === 'success' && Array.isArray(data.body_forces)) {
+            bodyForceSelect.innerHTML = '<option value="">Select a Body Force</option>';
+            data.body_forces.forEach(force => {
+                const option = document.createElement('option');
+                option.value = force.body_for_id;
+                option.textContent = `Body Force ${force.dens_num} on Line ${force.line_num}`;
+                bodyForceSelect.appendChild(option);
+            });
+        } else {
+            alert('Failed to load body forces.');
         }
+    } catch (error) {
+        console.error('Error loading body forces:', error);
+        alert('An error occurred while loading body forces.');
     }
+}
 
     // When a body force is selected, load its data into the inputs
     bodyForceSelect.addEventListener('change', async () => {
