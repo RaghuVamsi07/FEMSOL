@@ -87,13 +87,40 @@ button, select, label {
     margin-bottom: 0.5rem;
 }
 
+#forcesSection label, #forcesSection input {
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
 /* Upper Section */
 #upperSection {
     height: 20%; /* Adjust as needed */
     background-color: #f0f0f0;
     display: flex;
-    justify-content: space-around;
+    flex-direction: column; /* Stack rows vertically */
+    justify-content: center;
     align-items: center;
+}
+
+#upperSection h2 {
+    margin-bottom: 10px; /* Space between title and buttons */
+}
+
+/* Arrange buttons in rows */
+#upperSection button {
+    margin: 5px;
+    padding: 10px;
+    font-size: 14px;
+    border-radius: 5px;
+    background-color: #e0e0e0;
+    border: 1px solid #ccc;
+}
+
+#buttonContainer {
+    display: flex;
+    flex-wrap: wrap; /* Allow buttons to wrap to new rows */
+    justify-content: center;
+    width: 100%;
 }
 
 /* Middle Section */
@@ -103,6 +130,8 @@ button, select, label {
     display: flex;
     justify-content: center;
     align-items: center;
+    padding: 20px;
+    border: 1px solid #ddd; /* Optional: Adds a border for a clean look */
 }
 
 /* Lower Section */
@@ -112,11 +141,13 @@ button, select, label {
     display: flex;
     justify-content: space-around;
     align-items: center;
+    padding: 10px;
 }
 
 /* Hidden by default */
 .bcContent {
     display: none;
+    text-align: center; /* Center the text within the content area */
 }
 
 /* Show the content for the selected boundary condition */
@@ -132,7 +163,4 @@ button, select, label {
 
 
 
-#forcesSection label, #forcesSection input {
-    display: block;
-    margin-bottom: 0.5rem;
-}
+
