@@ -134,15 +134,6 @@ button, select, label {
     border: 1px solid #ddd; /* Optional: Adds a border for a clean look */
 }
 
-/* Lower Section */
-#lowerSection {
-    height: 20%; /* Adjust as needed */
-    background-color: #f0f0f0;
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    padding: 10px;
-}
 
 /* Hidden by default */
 .bcContent {
@@ -164,6 +155,26 @@ button, select, label {
 }
 
 
+#lowerSection {
+    height: 20%; /* Adjust as needed */
+    background-color: #f0f0f0;
+    display: flex;
+    justify-content: space-evenly; /* Evenly distribute buttons across the section */
+    align-items: center;
+    padding: 10px;
+    flex-wrap: wrap; /* Allows buttons to wrap into multiple rows */
+}
+
+#lowerSection button {
+    padding: 10px 15px; /* Adjust padding for better button size */
+    font-size: 14px; /* Adjust font size if needed */
+    margin: 5px; /* Add some margin around buttons */
+    border-radius: 5px; /* Slightly round corners */
+    background-color: #e0e0e0;
+    border: 1px solid #ccc;
+    flex: 1 1 45%; /* This ensures two buttons per row (adjust as needed) */
+    box-sizing: border-box; /* Ensures padding and borders don't overflow */
+}
 
 
 
