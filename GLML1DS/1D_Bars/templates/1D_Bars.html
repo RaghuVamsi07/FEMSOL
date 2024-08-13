@@ -246,6 +246,7 @@
         <!-- Middle Section -->
         <div id="middleSection">
             <!-- This section will dynamically show content based on the button selected -->
+           <!-- Inside the content1 div -->
             <div id="bc1Inputs" class="bcInputs">
                 <label for="lineNumBC1">Line Number:</label>
                 <input type="number" id="lineNumBC1" name="lineNumBC1" placeholder="Enter Line Number">
@@ -264,7 +265,16 @@
                 
                 <label for="y2BC1">Y2:</label>
                 <input type="number" id="y2BC1" name="y2BC1">
-            </div>        
+                
+                <button id="addBC1">Add BC1</button>
+                <button id="updateBC1">Update BC1</button>
+                <button id="deleteBC1">Delete BC1</button>
+                
+                <select id="bc1Select">
+                    <option value="">Select a Boundary Condition</option>
+                </select>
+            </div>
+
             
           
             <div id="content2" class="bcContent">Content for BC 2</div>
