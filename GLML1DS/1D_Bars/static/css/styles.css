@@ -87,6 +87,51 @@ button, select, label {
     margin-bottom: 0.5rem;
 }
 
+/* Upper Section */
+#upperSection {
+    height: 20%; /* Adjust as needed */
+    background-color: #f0f0f0;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+}
+
+/* Middle Section */
+#middleSection {
+    height: 60%; /* Adjust as needed */
+    background-color: #ffffff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Lower Section */
+#lowerSection {
+    height: 20%; /* Adjust as needed */
+    background-color: #f0f0f0;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+}
+
+/* Hidden by default */
+.bcContent {
+    display: none;
+}
+
+/* Show the content for the selected boundary condition */
+.bcContent.active {
+    display: block;
+}
+
+
+
+
+
+
+
+
+
 #forcesSection label, #forcesSection input {
     display: block;
     margin-bottom: 0.5rem;
