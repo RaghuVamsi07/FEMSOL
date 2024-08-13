@@ -246,7 +246,27 @@
         <!-- Middle Section -->
         <div id="middleSection">
             <!-- This section will dynamically show content based on the button selected -->
-            <div id="content1" class="bcContent">Content for BC 1</div>
+            <div id="bc1Inputs" class="bcInputs">
+                <label for="lineNumBC1">Line Number:</label>
+                <input type="number" id="lineNumBC1" name="lineNumBC1" placeholder="Enter Line Number">
+                
+                <label for="bcNumBC1">Boundary Condition Number:</label>
+                <input type="number" id="bcNumBC1" name="bcNumBC1" placeholder="Enter BC Number">
+                
+                <label for="x1BC1">X1:</label>
+                <input type="number" id="x1BC1" name="x1BC1">
+                
+                <label for="y1BC1">Y1:</label>
+                <input type="number" id="y1BC1" name="y1BC1">
+                
+                <label for="x2BC1">X2:</label>
+                <input type="number" id="x2BC1" name="x2BC1">
+                
+                <label for="y2BC1">Y2:</label>
+                <input type="number" id="y2BC1" name="y2BC1">
+            </div>        
+            
+          
             <div id="content2" class="bcContent">Content for BC 2</div>
             <div id="content3" class="bcContent">Content for BC 3</div>
             <div id="content4" class="bcContent">Content for BC 4</div>
@@ -306,6 +326,14 @@
             const selectedContent = document.querySelector(`#content${button.textContent}`);
             if (selectedContent) {
                 selectedContent.classList.add('active');
+            }
+
+            // Hide inputs for BC 1 if any other button is pressed
+            const bc1Inputs = document.getElementById('bc1Inputs');
+            if (button.textContent === '1') {
+                bc1Inputs.style.display = 'block';
+            } else {
+                bc1Inputs.style.display = 'none';
             }
         });
     });
