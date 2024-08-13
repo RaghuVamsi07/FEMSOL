@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (meshButton) {
         meshButton.addEventListener('click', async function() {
-            const sessionId = getCookie('session_id');  // Function to retrieve session_id from cookies
+            const sessionId = document.cookie.split('; ').find(row => row.startsWith('session_id')).split('=')[1];
 
             // Fetching data from sing_bodyCons_FE table
             const bcData = await fetch('/get-bc-data', {
