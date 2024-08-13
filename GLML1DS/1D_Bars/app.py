@@ -738,5 +738,138 @@ def delete_thermal_load(force_id):
 
 
 
+# Save BC1 data
+@app.route('/save-bc1', methods=['POST'])
+def save_bc1():
+    data = request.json
+    session_id = request.cookies.get('session_id')
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        query = """
+        INSERT INTO sing_bodyCons_FE (line_num, BC_num, x1, y1, x2, y2, session_id)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """
+        cursor.execute(query, (
+            data['line_num'],
+            data['BC_num'],
+            data['x1'],
+            data['y1'],
+            data['x2'],
+            data['y2'],
+            session_id
+        ))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return jsonify({'status': 'success'})
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({'status': 'error', 'message': 'Failed to save boundary condition data.'}), 500
+
+# Get all BC1s for the session
+@app.route('/get-bc1s', methods=['GET'])
+def get_bc1s():
+    session_id = request.cookies.get('session_id')
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        query = "SELECT id, line_num, BC_num FROM sing_bodyCons_FE WHERE session_id=%s"
+        cursor.execute(query, (session_id,))
+        bc1s = cursor.fetchall()
+        cursor.close()
+        conn.close()
+
+        return jsonify({'status': 'success', 'bc1s': [{'id': bc1[0], 'line_num': bc1[1], 'BC_num': bc1[2]} for bc1 in bc1s]})
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({'status': 'error', 'message': 'Failed to fetch boundary conditions.'}), 500
+
+# Get a single BC1 by ID
+@app.route('/get-bc1/<int:bc_id>', methods=['GET'])
+def get_bc1(bc_id):
+    session_id = request.cookies.get('session_id')
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        query = "SELECT line_num, BC_num, x1, y1, x2, y2 FROM sing_bodyCons_FE WHERE id=%s AND session_id=%s"
+        cursor.execute(query, (bc_id, session_id))
+        bc1_data = cursor.fetchone()
+        cursor.close()
+        conn.close()
+
+        if bc1_data:
+            return jsonify({'status': 'success', 'bc1_data': {
+                'line_num': bc1_data[0],
+                'BC_num': bc1_data[1],
+                'x1': bc1_data[2],
+                'y1': bc1_data[3],
+                'x2': bc1_data[4],
+                'y2': bc1_data[5]
+            }})
+        else:
+            return jsonify({'status': 'error', 'message': 'Boundary condition not found.'}), 404
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({'status': 'error', 'message': 'Failed to fetch boundary condition data.'}), 500
+
+# Update BC1 data
+@app.route('/update-bc1/<int:bc_id>', methods=['PUT'])
+def update_bc1(bc_id):
+    data = request.json
+    session_id = request.cookies.get('session_id')
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        query = """
+        UPDATE sing_bodyCons_FE
+        SET line_num=%s, BC_num=%s, x1=%s, y1=%s, x2=%s, y2=%s
+        WHERE id=%s AND session_id=%s
+        """
+        cursor.execute(query, (
+            data['line_num'],
+            data['BC_num'],
+            data['x1'],
+            data['y1'],
+            data['x2'],
+            data['y2'],
+            bc_id,
+            session_id
+        ))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return jsonify({'status': 'success'})
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({'status': 'error', 'message': 'Failed to update boundary condition data.'}), 500
+
+# Delete BC1
+@app.route('/delete-bc1/<int:bc_id>', methods=['DELETE'])
+def delete_bc1(bc_id):
+    session_id = request.cookies.get('session_id')
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        query = "DELETE FROM sing_bodyCons_FE WHERE id=%s AND session_id=%s"
+        cursor.execute(query, (bc_id, session_id))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return jsonify({'status': 'success'})
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({'status': 'error', 'message': 'Failed to delete boundary condition.'}), 500
+
+
+
+
+
+
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000, debug=True)
