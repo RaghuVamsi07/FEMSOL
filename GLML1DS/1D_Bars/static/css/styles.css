@@ -155,6 +155,13 @@ button, select, label {
     display: block;
 }
 
+.bcInputs {
+    display: none;
+}
+
+.bcInputs.active {
+    display: block;
+}
 
 
 
