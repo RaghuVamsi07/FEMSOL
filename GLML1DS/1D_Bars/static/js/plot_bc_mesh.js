@@ -6,7 +6,7 @@ function plotPrimaryNodes(primaryNodes) {
 
     Object.keys(primaryNodes).forEach(lineNum => {
         primaryNodes[lineNum].forEach(node => {
-            drawNode(ctx, node.x, node.y);
+            drawNode(ctx, node[0], node[1]);
         });
 
         // Optionally, you can draw lines between the nodes
@@ -27,8 +27,8 @@ function drawNode(ctx, x, y) {
 // Function to draw a line between two nodes
 function drawLine(ctx, node1, node2) {
     ctx.beginPath();
-    ctx.moveTo(node1.x, node1.y);
-    ctx.lineTo(node2.x, node2.y);
+    ctx.moveTo(node1[0], node1[1]);
+    ctx.lineTo(node2[0], node2[1]);
     ctx.strokeStyle = 'blue';
     ctx.stroke();
 }
