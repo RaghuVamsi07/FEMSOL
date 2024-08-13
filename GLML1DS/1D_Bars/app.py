@@ -871,6 +871,50 @@ def delete_bc1(bc_id):
         return jsonify({'status': 'error', 'message': 'Failed to delete boundary condition.'}), 500
 
 
+@app.route('/process-mesh-data', methods=['POST'])
+def process_mesh_data():
+    session_id = request.json['session_id']
+    
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Fetch data from lines_table
+        cursor.execute("SELECT line_num, x1, y1, x2, y2 FROM lines_table WHERE session_id=%s", (session_id,))
+        lines_data = cursor.fetchall()
+
+        # Fetch data from sing_bodyCons_FE
+        cursor.execute("SELECT line_num, x1, y1, x2, y2 FROM sing_bodyCons_FE WHERE session_id=%s", (session_id,))
+        bc1_data = cursor.fetchall()
+
+        # Combine and segregate based on line_num
+        primary_nodes = {}
+        
+        def add_to_primary_nodes(line_num, x, y):
+            if line_num not in primary_nodes:
+                primary_nodes[line_num] = []
+            primary_nodes[line_num].append((x, y))
+        
+        for line in lines_data:
+            add_to_primary_nodes(line[0], line[1], line[2])
+            add_to_primary_nodes(line[0], line[3], line[4])
+        
+        for bc in bc1_data:
+            add_to_primary_nodes(bc[0], bc[1], bc[2])
+            add_to_primary_nodes(bc[0], bc[3], bc[4])
+
+        # Remove duplicates
+        for line_num in primary_nodes:
+            primary_nodes[line_num] = list(set(primary_nodes[line_num]))
+
+        cursor.close()
+        conn.close()
+
+        return jsonify({'status': 'success', 'primary_nodes': primary_nodes})
+    
+    except Exception as e:
+        print(f"Error processing mesh data: {e}")
+        return jsonify({'status': 'error', 'message': 'Failed to process mesh data.'}), 500
 
 
 
