@@ -900,6 +900,14 @@ def generate_mesh():
         dist_forces_data = cursor.fetchall()
         print("dist forces data:", dist_forces_data)
 
+         # Fetch data from body_forces_table
+        cursor.execute("SELECT line_num, x_bf1, y_bf1, x_bf2, y_bf2 FROM body_forces_table WHERE session_id=%s", (session_id,))
+        body_forces_data = cursor.fetchall()
+
+        # Fetch data from thermal_loads_table
+        cursor.execute("SELECT line_num, xt1, yt1, xt2, yt2 FROM thermal_loads_table WHERE session_id=%s", (session_id,))
+        thermal_loads_data = cursor.fetchall()
+
 
 
         # Combine the data and remove duplicates (server-side processing)
@@ -931,6 +939,21 @@ def generate_mesh():
                 primary_nodes[dist_force[0]] = []
             primary_nodes[dist_force[0]].append({'x': dist_force[1], 'y': dist_force[2]})
             primary_nodes[dist_force[0]].append({'x': dist_force[3], 'y': dist_force[4]})
+
+        # Process body_forces_table data
+        for body_force in body_forces_data:
+            if body_force[0] not in primary_nodes:
+                primary_nodes[body_force[0]] = []
+            primary_nodes[body_force[0]].append({'x': body_force[1], 'y': body_force[2]})
+            primary_nodes[body_force[0]].append({'x': body_force[3], 'y': body_force[4]})
+
+        # Process thermal_loads_table data
+        for thermal_load in thermal_loads_data:
+            if thermal_load[0] not in primary_nodes:
+                primary_nodes[thermal_load[0]] = []
+            primary_nodes[thermal_load[0]].append({'x': thermal_load[1], 'y': thermal_load[2]})
+            primary_nodes[thermal_load[0]].append({'x': thermal_load[3], 'y': thermal_load[4]})
+        
 
         
         
