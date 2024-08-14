@@ -931,22 +931,22 @@ def generate_mesh():
         for dist_force in dist_forces_data:
             if dist_force[0] not in primary_nodes:
                 primary_nodes[dist_force[0]] = []
-            primary_nodes[dist_force[0]].append({'x': dist_force[1], 'y': dist_force[2]})
-            primary_nodes[dist_force[0]].append({'x': dist_force[3], 'y': dist_force[4]})
+            primary_nodes[dist_force[0]].append({'x': dist_force[4], 'y': dist_force[5]})
+            primary_nodes[dist_force[0]].append({'x': dist_force[6], 'y': dist_force[7]})
 
         # Process body_forces_table data
         for body_force in body_forces_data:
             if body_force[0] not in primary_nodes:
                 primary_nodes[body_force[0]] = []
-            primary_nodes[body_force[0]].append({'x': body_force[1], 'y': body_force[2]})
-            primary_nodes[body_force[0]].append({'x': body_force[3], 'y': body_force[4]})
+            primary_nodes[body_force[0]].append({'x': body_force[6], 'y': body_force[7]})
+            primary_nodes[body_force[0]].append({'x': body_force[8], 'y': body_force[9]})
 
         # Process thermal_loads_table data
         for thermal_load in thermal_loads_data:
             if thermal_load[0] not in primary_nodes:
                 primary_nodes[thermal_load[0]] = []
-            primary_nodes[thermal_load[0]].append({'x': thermal_load[1], 'y': thermal_load[2]})
-            primary_nodes[thermal_load[0]].append({'x': thermal_load[3], 'y': thermal_load[4]})
+            primary_nodes[thermal_load[0]].append({'x': thermal_load[4], 'y': thermal_load[5]})
+            primary_nodes[thermal_load[0]].append({'x': thermal_load[6], 'y': thermal_load[7]})
         
         # Remove duplicate nodes
         for line_num in primary_nodes:
