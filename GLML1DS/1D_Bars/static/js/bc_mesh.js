@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', function() {
         for(let i = 0; i < cookieArr.length; i++) {
             let cookiePair = cookieArr[i].split("=");
             
-            if(name == cookiePair[0].trim()) {
+            if(name === cookiePair[0].trim()) {
                 return decodeURIComponent(cookiePair[1]);
             }
         }
@@ -48,8 +48,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Function to plot primary nodes on the canvas
     function plotPrimaryNodes(primaryNodes) {
-        const canvas = document.getElementById('graphCanvas');
+        const canvas = document.getElementById('canvas');  // Make sure this matches your canvas ID
+        if (!canvas) {
+            console.error('Canvas element not found!');
+            return;
+        }
+
         const ctx = canvas.getContext('2d');
+        if (!ctx) {
+            console.error('Failed to get canvas context!');
+            return;
+        }
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
