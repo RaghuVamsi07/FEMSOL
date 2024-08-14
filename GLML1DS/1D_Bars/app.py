@@ -871,50 +871,80 @@ def delete_bc1(bc_id):
         return jsonify({'status': 'error', 'message': 'Failed to delete boundary condition.'}), 500
 
 
-@app.route('/process-mesh-data', methods=['POST'])
-def process_mesh_data():
-    session_id = request.json['session_id']
+# Fetching lines data from the database
+def fetch_lines(session_id):
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM lines_table WHERE session_id=%s", (session_id,))
+    lines = cursor.fetchall()
+    connection.close()
+    return lines
+
+# Fetching boundary conditions data from the database
+def fetch_bc_data(session_id):
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM sing_bodyCons_FE WHERE session_id=%s", (session_id,))
+    bc_data = cursor.fetchall()
+    connection.close()
+    return bc_data
+
+
+# Generate primary nodes based on fetched data
+def generate_primary_nodes(lines, bc_data, forces, dist_forces, body_forces, thermal_loads):
+    primary_nodes = {}
+
+    # Incorporate line data
+    for line in lines:
+        if line['line_num'] not in primary_nodes:
+            primary_nodes[line['line_num']] = []
+        primary_nodes[line['line_num']].append({'x': line['x1'], 'y': line['y1']})
+        primary_nodes[line['line_num']].append({'x': line['x2'], 'y': line['y2']})
+
+    # Incorporate boundary conditions data
+    for bc in bc_data:
+        if bc['line_num'] not in primary_nodes:
+            primary_nodes[bc['line_num']] = []
+        primary_nodes[bc['line_num']].append({'x': bc['x1'], 'y': bc['y1']})
+        primary_nodes[bc['line_num']].append({'x': bc['x2'], 'y': bc['y2']})
+
+    # Repeat for other forces
+    # ...
+
+    # Remove duplicates in primary nodes
+    for line_num in primary_nodes:
+        primary_nodes[line_num] = remove_duplicates(primary_nodes[line_num])
+
+    return primary_nodes
+
+# Function to remove duplicates based on coordinates
+def remove_duplicates(nodes):
+    unique_nodes = []
+    seen = set()
+
+    for node in nodes:
+        coord = (node['x'], node['y'])
+        if coord not in seen:
+            unique_nodes.append(node)
+            seen.add(coord)
+
+    return unique_nodes
+
+# Endpoint to generate mesh
+@app.route('/generate-mesh', methods=['POST'])
+def generate_mesh():
+    session_id = request.json.get('session_id')
     
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-
-        # Fetch data from lines_table
-        cursor.execute("SELECT line_num, x1, y1, x2, y2 FROM lines_table WHERE session_id=%s", (session_id,))
-        lines_data = cursor.fetchall()
-
-        # Fetch data from sing_bodyCons_FE
-        cursor.execute("SELECT line_num, x1, y1, x2, y2 FROM sing_bodyCons_FE WHERE session_id=%s", (session_id,))
-        bc1_data = cursor.fetchall()
-
-        # Combine and segregate based on line_num
-        primary_nodes = {}
-        
-        def add_to_primary_nodes(line_num, x, y):
-            if line_num not in primary_nodes:
-                primary_nodes[line_num] = []
-            primary_nodes[line_num].append((x, y))
-        
-        for line in lines_data:
-            add_to_primary_nodes(line[0], line[1], line[2])
-            add_to_primary_nodes(line[0], line[3], line[4])
-        
-        for bc in bc1_data:
-            add_to_primary_nodes(bc[0], bc[1], bc[2])
-            add_to_primary_nodes(bc[0], bc[3], bc[4])
-
-        # Remove duplicates
-        for line_num in primary_nodes:
-            primary_nodes[line_num] = list(set(primary_nodes[line_num]))
-
-        cursor.close()
-        conn.close()
-
-        return jsonify({'status': 'success', 'primary_nodes': primary_nodes})
+    # Fetch data
+    lines = fetch_lines(session_id)
+    bc_data = fetch_bc_data(session_id)
     
-    except Exception as e:
-        print(f"Error processing mesh data: {e}")
-        return jsonify({'status': 'error', 'message': 'Failed to process mesh data.'}), 500
+    # Generate primary nodes
+    primary_nodes = generate_primary_nodes(lines, bc_data, forces, dist_forces, body_forces, thermal_loads)
+
+    # Generate mesh data (you can implement further subdivision logic here)
+    # For now, we will return the primary nodes
+    return jsonify({"status": "success", "mesh_data": primary_nodes})
 
 
 
