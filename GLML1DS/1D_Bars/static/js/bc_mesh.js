@@ -1,69 +1,80 @@
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', () => {
     const meshButton = document.getElementById('mesh');
 
     if (meshButton) {
         meshButton.addEventListener('click', async function() {
-            const sessionId = getCookie('session_id');  // Assuming you have the getCookie function defined elsewhere
+            const sessionId = getCookie('session_id');
 
-            // Request to generate mesh
-            const response = await fetch('/generate-mesh', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ session_id: sessionId })
-            });
+            try {
+                const response = await fetch('/generate-mesh', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ session_id: sessionId })
+                });
+                
+                const result = await response.json();
 
-            const result = await response.json();
+                if (result.status === 'success') {
+                    const bcData = result.bc_data;
+                    const linesData = result.lines_data;
 
-            if (result.status === 'success') {
-                plotPrimaryNodes(result.mesh_data);  // Plot the returned mesh data
-            } else {
-                alert('Failed to generate mesh.');
+                    const primaryNodes = segregateAndCombineCoordinates(bcData, linesData);
+
+                    plotPrimaryNodes(primaryNodes);  // Assuming you have the function to plot the nodes
+
+                } else {
+                    alert(result.message || 'Failed to generate mesh.');
+                }
+            } catch (error) {
+                console.error('Error generating mesh:', error);
+                alert('An error occurred while generating mesh.');
             }
         });
     }
 
-    // Function to plot primary nodes on canvas
-    function plotPrimaryNodes(primaryNodes) {
-        const canvas = document.getElementById('graphCanvas');
-        const ctx = canvas.getContext('2d');
+    // Function to segregate and combine the coordinates
+    function segregateAndCombineCoordinates(bcData, linesData) {
+        const primaryNodes = {};
 
-        ctx.clearRect(0, 0, canvas.width, canvas.height);  // Clear the canvas
+        linesData.forEach(line => {
+            if (!primaryNodes[line.line_num]) {
+                primaryNodes[line.line_num] = [];
+            }
+            primaryNodes[line.line_num].push({ x: line.x1, y: line.y1 });
+            primaryNodes[line.line_num].push({ x: line.x2, y: line.y2 });
+        });
 
+        bcData.forEach(bc => {
+            if (!primaryNodes[bc.line_num]) {
+                primaryNodes[bc.line_num] = [];
+            }
+            primaryNodes[bc.line_num].push({ x: bc.x1, y: bc.y1 });
+            primaryNodes[bc.line_num].push({ x: bc.x2, y: bc.y2 });
+        });
+
+        // Remove duplicate nodes based on their coordinates
         Object.keys(primaryNodes).forEach(lineNum => {
-            primaryNodes[lineNum].forEach(node => {
-                drawNode(ctx, node.x, node.y);
-            });
+            primaryNodes[lineNum] = removeDuplicates(primaryNodes[lineNum]);
+        });
 
-            // Optionally, draw lines between the nodes
-            for (let i = 0; i < primaryNodes[lineNum].length - 1; i++) {
-                drawLine(ctx, primaryNodes[lineNum][i], primaryNodes[lineNum][i + 1]);
+        return primaryNodes;
+    }
+
+    // Function to remove duplicate nodes based on coordinates
+    function removeDuplicates(nodes) {
+        const uniqueNodes = [];
+        const seen = new Set();
+
+        nodes.forEach(node => {
+            const coord = `${node.x},${node.y}`;
+            if (!seen.has(coord)) {
+                uniqueNodes.push(node);
+                seen.add(coord);
             }
         });
-    }
 
-    // Helper function to draw a node
-    function drawNode(ctx, x, y) {
-        ctx.beginPath();
-        ctx.arc(x, y, 3, 0, Math.PI * 2, true);  // Small circle to represent the node
-        ctx.fillStyle = 'blue';
-        ctx.fill();
-    }
-
-    // Helper function to draw a line between two nodes
-    function drawLine(ctx, node1, node2) {
-        ctx.beginPath();
-        ctx.moveTo(node1.x, node1.y);
-        ctx.lineTo(node2.x, node2.y);
-        ctx.strokeStyle = 'blue';
-        ctx.stroke();
+        return uniqueNodes;
     }
 });
-
-// Define the getCookie function if it's not defined
-function getCookie(name) {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) return parts.pop().split(';').shift();
-}
