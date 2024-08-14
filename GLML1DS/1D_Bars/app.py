@@ -892,6 +892,18 @@ def generate_mesh():
         cursor.execute("SELECT line_num, fx, fy, x, y FROM forces_table WHERE session_id=%s", (session_id,))
         forces_data = cursor.fetchall()
 
+        # Fetch data from dist_forces_table
+        cursor.execute("SELECT line_num, x1, y1, x2, y2 FROM dist_forces_table WHERE session_id=%s", (session_id,))
+        dist_forces_data = cursor.fetchall()
+
+        # Fetch data from body_forces_table
+        cursor.execute("SELECT line_num, x1, y1, x2, y2 FROM body_forces_table WHERE session_id=%s", (session_id,))
+        body_forces_data = cursor.fetchall()
+
+        # Fetch data from thermal_loads_table
+        cursor.execute("SELECT line_num, xt1, yt1, xt2, yt2 FROM thermal_loads_table WHERE session_id=%s", (session_id,))
+        thermal_loads_data = cursor.fetchall()
+
         # Combine the data and remove duplicates (server-side processing)
         primary_nodes = {}
         
@@ -914,6 +926,27 @@ def generate_mesh():
             if force[0] not in primary_nodes:
                 primary_nodes[force[0]] = []
             primary_nodes[force[0]].append({'x': force[3], 'y': force[4]})
+
+        # Process dist_forces_table data
+        for dist_force in dist_forces_data:
+            if dist_force[0] not in primary_nodes:
+                primary_nodes[dist_force[0]] = []
+            primary_nodes[dist_force[0]].append({'x': dist_force[1], 'y': dist_force[2]})
+            primary_nodes[dist_force[0]].append({'x': dist_force[3], 'y': dist_force[4]})
+
+        # Process body_forces_table data
+        for body_force in body_forces_data:
+            if body_force[0] not in primary_nodes:
+                primary_nodes[body_force[0]] = []
+            primary_nodes[body_force[0]].append({'x': body_force[1], 'y': body_force[2]})
+            primary_nodes[body_force[0]].append({'x': body_force[3], 'y': body_force[4]})
+
+        # Process thermal_loads_table data
+        for thermal_load in thermal_loads_data:
+            if thermal_load[0] not in primary_nodes:
+                primary_nodes[thermal_load[0]] = []
+            primary_nodes[thermal_load[0]].append({'x': thermal_load[1], 'y': thermal_load[2]})
+            primary_nodes[thermal_load[0]].append({'x': thermal_load[3], 'y': thermal_load[4]})
         
         # Remove duplicate nodes
         for line_num in primary_nodes:
