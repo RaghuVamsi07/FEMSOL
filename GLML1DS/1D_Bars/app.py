@@ -883,26 +883,33 @@ def generate_mesh():
         # Fetch data from lines_table
         cursor.execute("SELECT line_num, x1, y1, x2, y2 FROM lines_table WHERE session_id=%s", (session_id,))
         lines_data = cursor.fetchall()
+        print("Lines Data:", lines_data)
 
         # Fetch data from sing_bodyCons_FE table (BC1 data)
         cursor.execute("SELECT line_num, BC_num, x1, y1, x2, y2 FROM sing_bodyCons_FE WHERE session_id=%s", (session_id,))
         bc_data = cursor.fetchall()
+        print("BC data:", bc_data)
 
         # Fetch data from forces_table
         cursor.execute("SELECT line_num, fx, fy, x, y FROM forces_table WHERE session_id=%s", (session_id,))
         forces_data = cursor.fetchall()
+        print("forces data:", forces_data)
 
         # Fetch data from dist_forces_table
         cursor.execute("SELECT line_num, x1, y1, x2, y2 FROM dist_forces_table WHERE session_id=%s", (session_id,))
         dist_forces_data = cursor.fetchall()
+        print("dist forces data:", dist_forces_data)
+
 
         # Fetch data from body_forces_table
         cursor.execute("SELECT line_num, x_bf1, y_bf1, x_bf2, y_bf2 FROM body_forces_table WHERE session_id=%s", (session_id,))
         body_forces_data = cursor.fetchall()
+        print("body forces data:", body_forces_data)
 
         # Fetch data from thermal_loads_table
         cursor.execute("SELECT line_num, xt1, yt1, xt2, yt2 FROM thermal_loads_table WHERE session_id=%s", (session_id,))
         thermal_loads_data = cursor.fetchall()
+        print("thermal loads data:", thermal_loads_data)
 
         # Combine the data and remove duplicates (server-side processing)
         primary_nodes = {}
