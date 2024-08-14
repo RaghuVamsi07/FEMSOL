@@ -1,12 +1,12 @@
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', function() {
     const meshButton = document.getElementById('mesh');
 
     if (meshButton) {
         meshButton.addEventListener('click', async function() {
-            const sessionId = getCookie('session_id');
+            const sessionId = getCookie('session_id');  // Fetch session ID from cookies
 
             try {
-                const response = await fetch('/generate-mesh', {
+                const response = await fetch('/fetch-mesh-data', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -17,64 +17,31 @@ document.addEventListener('DOMContentLoaded', () => {
                 const result = await response.json();
 
                 if (result.status === 'success') {
-                    const bcData = result.bc_data;
-                    const linesData = result.lines_data;
-
-                    const primaryNodes = segregateAndCombineCoordinates(bcData, linesData);
-
-                    plotPrimaryNodes(primaryNodes);  // Assuming you have the function to plot the nodes
-
+                    console.log('BC Data received from server:', result.bc_data);  // Checkpoint: Log BC data
+                    console.log('Lines Data received from server:', result.lines_data);  // Checkpoint: Log lines data
+                    // Handle the data (e.g., plot on canvas, etc.)
                 } else {
-                    alert(result.message || 'Failed to generate mesh.');
+                    alert(result.message || 'Failed to fetch mesh data.');
                 }
             } catch (error) {
-                console.error('Error generating mesh:', error);
-                alert('An error occurred while generating mesh.');
+                console.error('Error fetching mesh data:', error);
+                alert('An error occurred while fetching mesh data.');
             }
         });
-    }
-
-    // Function to segregate and combine the coordinates
-    function segregateAndCombineCoordinates(bcData, linesData) {
-        const primaryNodes = {};
-
-        linesData.forEach(line => {
-            if (!primaryNodes[line.line_num]) {
-                primaryNodes[line.line_num] = [];
-            }
-            primaryNodes[line.line_num].push({ x: line.x1, y: line.y1 });
-            primaryNodes[line.line_num].push({ x: line.x2, y: line.y2 });
-        });
-
-        bcData.forEach(bc => {
-            if (!primaryNodes[bc.line_num]) {
-                primaryNodes[bc.line_num] = [];
-            }
-            primaryNodes[bc.line_num].push({ x: bc.x1, y: bc.y1 });
-            primaryNodes[bc.line_num].push({ x: bc.x2, y: bc.y2 });
-        });
-
-        // Remove duplicate nodes based on their coordinates
-        Object.keys(primaryNodes).forEach(lineNum => {
-            primaryNodes[lineNum] = removeDuplicates(primaryNodes[lineNum]);
-        });
-
-        return primaryNodes;
-    }
-
-    // Function to remove duplicate nodes based on coordinates
-    function removeDuplicates(nodes) {
-        const uniqueNodes = [];
-        const seen = new Set();
-
-        nodes.forEach(node => {
-            const coord = `${node.x},${node.y}`;
-            if (!seen.has(coord)) {
-                uniqueNodes.push(node);
-                seen.add(coord);
-            }
-        });
-
-        return uniqueNodes;
     }
 });
+
+// Utility function to get the session_id from cookies
+function getCookie(name) {
+    let cookieArr = document.cookie.split(";");
+    
+    for(let i = 0; i < cookieArr.length; i++) {
+        let cookiePair = cookieArr[i].split("=");
+        
+        if(name == cookiePair[0].trim()) {
+            return decodeURIComponent(cookiePair[1]);
+        }
+    }
+    
+    return null;
+}
