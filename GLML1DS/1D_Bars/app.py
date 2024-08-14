@@ -929,8 +929,8 @@ def generate_mesh():
         for dist_force in dist_forces_data:
             if dist_force[0] not in primary_nodes:
                 primary_nodes[dist_force[0]] = []
-            primary_nodes[dist_force[0]].append({'x': dist_force[3], 'y': dist_force[4]})
-            primary_nodes[dist_force[0]].append({'x': dist_force[5], 'y': dist_force[6]})
+            primary_nodes[dist_force[0]].append({'x': dist_force[4], 'y': dist_force[5]})
+            primary_nodes[dist_force[0]].append({'x': dist_force[6], 'y': dist_force[7]})
 
         
         
