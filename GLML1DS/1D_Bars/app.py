@@ -1,10 +1,11 @@
 from flask import Flask, request, jsonify, render_template, session, make_response
 import mysql.connector
 import os
+import math
 from flask_session import Session
 from math import isclose
+from sympy import symbols, integrate, lambdify, sympify
 import uuid
-from sympy import sympify, symbols, integrate, lambdify
 
 app = Flask(__name__, static_folder='static')
 
@@ -871,8 +872,49 @@ def delete_bc1(bc_id):
         return jsonify({'status': 'error', 'message': 'Failed to delete boundary condition.'}), 500
 
 
-import math
-from sympy import symbols, integrate, lambdify
+
+# Utility function for removing duplicates
+def remove_duplicates(nodes):
+    unique_nodes = []
+    seen = set()
+
+    for node in nodes:
+        coord = (node['x'], node['y'])
+        if coord not in seen:
+            unique_nodes.append(node)
+            seen.add(coord)
+
+    return unique_nodes
+
+# Function to integrate force or area functions over a segment
+def integrate_function(function_expression, x_start, x_end):
+    x = symbols('x')
+    func = lambdify(x, sympify(function_expression), 'numpy')
+    return integrate(func(x), (x, x_start, x_end))
+
+# Function to add secondary nodes based on force distribution and area variation
+def add_secondary_nodes(x1, y1, x2, y2, primary_nodes, force_function, area_function=None):
+    # Integrate the force and area functions over the segment
+    total_force = integrate_function(force_function, x1, x2)
+    
+    # If area_function is provided, consider its effect as well
+    if area_function:
+        total_area_variation = integrate_function(area_function, x1, x2)
+        total_effect = total_force * total_area_variation
+    else:
+        total_effect = total_force
+    
+    # Determine the number of secondary nodes based on total effect
+    n_total = max(2, int(total_effect ** 0.5))  # Adjust subdivision based on square root of the effect
+    
+    if n_total > 1:
+        dx = (x2 - x1) / n_total
+        dy = (y2 - y1) / n_total
+        
+        for i in range(1, n_total):
+            new_x = x1 + i * dx
+            new_y = y1 + i * dy
+            primary_nodes.append({'x': new_x, 'y': new_y})
 
 @app.route('/generate-mesh', methods=['POST'])
 def generate_mesh():
@@ -886,32 +928,26 @@ def generate_mesh():
         # Fetch data from lines_table
         cursor.execute("SELECT line_num, x1, y1, x2, y2 FROM lines_table WHERE session_id=%s", (session_id,))
         lines_data = cursor.fetchall()
-        print("Lines Data:", lines_data)
 
         # Fetch data from sing_bodyCons_FE table (BC1 data)
         cursor.execute("SELECT line_num, BC_num, x1, y1, x2, y2 FROM sing_bodyCons_FE WHERE session_id=%s", (session_id,))
         bc_data = cursor.fetchall()
-        print("BC data:", bc_data)
 
         # Fetch data from forces_table
         cursor.execute("SELECT line_num, fx, fy, x, y FROM forces_table WHERE session_id=%s", (session_id,))
         forces_data = cursor.fetchall()
-        print("Forces data:", forces_data)
 
         # Fetch data from dist_forces_table
-        cursor.execute("SELECT line_num, force_dist, x1, y1, x2, y2 FROM dist_forces_table WHERE session_id=%s", (session_id,))
+        cursor.execute("SELECT line_num, x1, y1, x2, y2, force_dist FROM dist_forces_table WHERE session_id=%s", (session_id,))
         dist_forces_data = cursor.fetchall()
-        print("Dist forces data:", dist_forces_data)
 
         # Fetch data from body_forces_table
-        cursor.execute("SELECT line_num, area, x_bf1, y_bf1, x_bf2, y_bf2 FROM body_forces_table WHERE session_id=%s", (session_id,))
+        cursor.execute("SELECT line_num, x_bf1, y_bf1, x_bf2, y_bf2, area FROM body_forces_table WHERE session_id=%s", (session_id,))
         body_forces_data = cursor.fetchall()
-        print("Body forces data:", body_forces_data)
 
         # Fetch data from thermal_loads_table
         cursor.execute("SELECT line_num, xt1, yt1, xt2, yt2 FROM thermal_loads_table WHERE session_id=%s", (session_id,))
         thermal_loads_data = cursor.fetchall()
-        print("Thermal loads data:", thermal_loads_data)
 
         # Combine the data and remove duplicates (server-side processing)
         primary_nodes = {}
@@ -922,7 +958,7 @@ def generate_mesh():
                 primary_nodes[line[0]] = []
             primary_nodes[line[0]].append({'x': line[1], 'y': line[2]})
             primary_nodes[line[0]].append({'x': line[3], 'y': line[4]})
-        
+
         # Process sing_bodyCons_FE (BC1) data
         for bc in bc_data:
             if bc[0] not in primary_nodes:
@@ -936,27 +972,21 @@ def generate_mesh():
                 primary_nodes[force[0]] = []
             primary_nodes[force[0]].append({'x': force[3], 'y': force[4]})
 
-        # Process dist_forces_table data and add secondary nodes based on force distribution
+        # Process dist_forces_table data
         for dist_force in dist_forces_data:
-            line_num, force_dist, x1, y1, x2, y2 = dist_force
-            if line_num not in primary_nodes:
-                primary_nodes[line_num] = []
+            if dist_force[0] not in primary_nodes:
+                primary_nodes[dist_force[0]] = []
+            primary_nodes[dist_force[0]].append({'x': dist_force[1], 'y': dist_force[2]})
+            primary_nodes[dist_force[0]].append({'x': dist_force[3], 'y': dist_force[4]})
+            add_secondary_nodes(dist_force[1], dist_force[2], dist_force[3], dist_force[4], primary_nodes[dist_force[0]], dist_force[5])
 
-            primary_nodes[line_num].append({'x': x1, 'y': y1})
-            primary_nodes[line_num].append({'x': x2, 'y': y2})
-
-            add_secondary_nodes(primary_nodes[line_num], x1, y1, x2, y2, force_dist)
-
-        # Process body_forces_table data and add secondary nodes based on area variation
+        # Process body_forces_table data
         for body_force in body_forces_data:
-            line_num, area_func, x_bf1, y_bf1, x_bf2, y_bf2 = body_force
-            if line_num not in primary_nodes:
-                primary_nodes[line_num] = []
-
-            primary_nodes[line_num].append({'x': x_bf1, 'y': y_bf1})
-            primary_nodes[line_num].append({'x': x_bf2, 'y': y_bf2})
-
-            add_secondary_nodes(primary_nodes[line_num], x_bf1, y_bf1, x_bf2, y_bf2, area_func, area=True)
+            if body_force[0] not in primary_nodes:
+                primary_nodes[body_force[0]] = []
+            primary_nodes[body_force[0]].append({'x': body_force[1], 'y': body_force[2]})
+            primary_nodes[body_force[0]].append({'x': body_force[3], 'y': body_force[4]})
+            add_secondary_nodes(body_force[1], body_force[2], body_force[3], body_force[4], primary_nodes[body_force[0]], '1', area_function=body_force[5])
 
         # Process thermal_loads_table data
         for thermal_load in thermal_loads_data:
@@ -978,42 +1008,7 @@ def generate_mesh():
         print(f"Error generating mesh: {e}")
         return jsonify({'status': 'error', 'message': 'Failed to generate mesh.'}), 500
 
-def remove_duplicates(nodes):
-    unique_nodes = []
-    seen = set()
 
-    for node in nodes:
-        coord = (node['x'], node['y'])
-        if coord not in seen:
-            unique_nodes.append(node)
-            seen.add(coord)
-
-    return unique_nodes
-
-def add_secondary_nodes(nodes, x1, y1, x2, y2, func_str, area=False):
-    """
-    Adds secondary nodes based on the force distribution or area variation.
-    """
-    x = symbols('x')
-    l1 = math.sqrt(x1**2 + y1**2)
-    l2 = math.sqrt(x2**2 + y2**2)
-
-    # Integrate the force distribution function between l1 and l2
-    func = lambdify(x, func_str, 'numpy')
-    total_force = integrate(func(x), (x, l1, l2))
-    
-    if area:
-        total_force *= integrate(lambdify(x, area), (x, l1, l2))  # Adjust for area variation if needed
-    
-    n_total = max(2, int(math.ceil(abs(total_force) / 10)))  # Adjust this value based on the desired accuracy
-
-    # Add secondary nodes based on the calculated total number of nodes
-    for i in range(1, n_total):
-        xi = x1 + (x2 - x1) * (i / n_total)
-        yi = y1 + (y2 - y1) * (i / n_total)
-        nodes.append({'x': xi, 'y': yi})
-
-    nodes.sort(key=lambda node: (node['x'], node['y']))  # Ensure nodes are ordered correctly
 
 
 if __name__ == "__main__":
