@@ -897,7 +897,7 @@ def generate_mesh():
         dist_forces_data = cursor.fetchall()
 
         # Fetch data from body_forces_table
-        cursor.execute("SELECT line_num, x1, y1, x2, y2 FROM body_forces_table WHERE session_id=%s", (session_id,))
+        cursor.execute("SELECT line_num, x_bf1, y_bf1, x_bf2, y_bf2 FROM body_forces_table WHERE session_id=%s", (session_id,))
         body_forces_data = cursor.fetchall()
 
         # Fetch data from thermal_loads_table
@@ -931,8 +931,8 @@ def generate_mesh():
         for dist_force in dist_forces_data:
             if dist_force[0] not in primary_nodes:
                 primary_nodes[dist_force[0]] = []
-            primary_nodes[dist_force[0]].append({'x': dist_force[4], 'y': dist_force[5]})
-            primary_nodes[dist_force[0]].append({'x': dist_force[6], 'y': dist_force[7]})
+            primary_nodes[dist_force[0]].append({'x': dist_force[3], 'y': dist_force[4]})
+            primary_nodes[dist_force[0]].append({'x': dist_force[5], 'y': dist_force[6]})
 
         # Process body_forces_table data
         for body_force in body_forces_data:
@@ -972,7 +972,6 @@ def remove_duplicates(nodes):
             seen.add(coord)
 
     return unique_nodes
-
 
 
 if __name__ == "__main__":
