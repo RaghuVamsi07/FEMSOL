@@ -888,20 +888,32 @@ def generate_mesh():
         cursor.execute("SELECT line_num, BC_num, x1, y1, x2, y2 FROM sing_bodyCons_FE WHERE session_id=%s", (session_id,))
         bc_data = cursor.fetchall()
 
+        # Fetch data from forces_table
+        cursor.execute("SELECT line_num, fx, fy, x, y FROM forces_table WHERE session_id=%s", (session_id,))
+        forces_data = cursor.fetchall()
+
         # Combine the data and remove duplicates (server-side processing)
         primary_nodes = {}
         
+        # Process lines_table data
         for line in lines_data:
             if line[0] not in primary_nodes:
                 primary_nodes[line[0]] = []
             primary_nodes[line[0]].append({'x': line[1], 'y': line[2]})
             primary_nodes[line[0]].append({'x': line[3], 'y': line[4]})
         
+        # Process sing_bodyCons_FE (BC1) data
         for bc in bc_data:
             if bc[0] not in primary_nodes:
                 primary_nodes[bc[0]] = []
             primary_nodes[bc[0]].append({'x': bc[2], 'y': bc[3]})
             primary_nodes[bc[0]].append({'x': bc[4], 'y': bc[5]})
+
+        # Process forces_table data
+        for force in forces_data:
+            if force[0] not in primary_nodes:
+                primary_nodes[force[0]] = []
+            primary_nodes[force[0]].append({'x': force[3], 'y': force[4]})
         
         # Remove duplicate nodes
         for line_num in primary_nodes:
