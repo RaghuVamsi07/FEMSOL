@@ -871,29 +871,32 @@ def delete_bc1(bc_id):
         return jsonify({'status': 'error', 'message': 'Failed to delete boundary condition.'}), 500
 
 
-# Get all relevant data for mesh generation
-@app.route('/generate-mesh', methods=['POST'])
-def generate_mesh():
-    session_id = request.cookies.get('session_id')
+@app.route('/fetch-mesh-data', methods=['POST'])
+def fetch_mesh_data():
+    session_id = request.json.get('session_id')
     
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Fetch data from sing_bodyCons_FE
+        # Fetch data from sing_bodyCons_FE table
         cursor.execute("SELECT line_num, BC_num, x1, y1, x2, y2 FROM sing_bodyCons_FE WHERE session_id=%s", (session_id,))
         bc_data = cursor.fetchall()
+        print(f"BC Data for session_id {session_id}: {bc_data}")  # Checkpoint: Print fetched BC data
 
         # Fetch data from lines_table
         cursor.execute("SELECT line_num, x1, y1, x2, y2 FROM lines_table WHERE session_id=%s", (session_id,))
         lines_data = cursor.fetchall()
+        print(f"Lines Data for session_id {session_id}: {lines_data}")  # Checkpoint: Print fetched lines data
 
         conn.close()
 
+        # Returning both bc_data and lines_data in a JSON response
         return jsonify({'status': 'success', 'bc_data': bc_data, 'lines_data': lines_data})
     except Exception as e:
-        print(f"Error generating mesh: {e}")
-        return jsonify({'status': 'error', 'message': 'Failed to generate mesh.'}), 500
+        print(f"Error fetching mesh data: {e}")
+        return jsonify({'status': 'error', 'message': 'Failed to fetch mesh data.'}), 500
+
 
 
 if __name__ == "__main__":
