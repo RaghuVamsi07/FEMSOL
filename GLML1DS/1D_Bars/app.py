@@ -980,7 +980,8 @@ def generate_mesh():
                 primary_nodes[dist_force[0]] = []
             primary_nodes[dist_force[0]].append({'x': dist_force[1], 'y': dist_force[2]})
             primary_nodes[dist_force[0]].append({'x': dist_force[3], 'y': dist_force[4]})
-            add_secondary_nodes(dist_force[1], dist_force[2], dist_force[3], dist_force[4], primary_nodes[dist_force[0]], dist_force[5])
+            add_secondary_nodes(dist_force[1], dist_force[2], dist_force[3], dist_force[4], 
+                                primary_nodes[dist_force[0]], dist_force[5])
 
         # Process body_forces_table data
         for body_force in body_forces_data:
@@ -988,7 +989,8 @@ def generate_mesh():
                 primary_nodes[body_force[0]] = []
             primary_nodes[body_force[0]].append({'x': body_force[1], 'y': body_force[2]})
             primary_nodes[body_force[0]].append({'x': body_force[3], 'y': body_force[4]})
-            add_secondary_nodes(body_force[1], body_force[2], body_force[3], body_force[4], primary_nodes[body_force[0]], '1', area_function=body_force[5])
+            add_secondary_nodes(body_force[1], body_force[2], body_force[3], body_force[4], 
+                                primary_nodes[body_force[0]], '1', area_function=body_force[5])
 
         # Process thermal_loads_table data
         for thermal_load in thermal_loads_data:
