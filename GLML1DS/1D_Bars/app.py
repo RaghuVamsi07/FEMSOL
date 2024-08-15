@@ -6,7 +6,6 @@ from flask_session import Session
 from math import isclose
 from sympy import symbols, integrate, lambdify, sympify
 import uuid
-import numpy as np
 
 
 
@@ -876,7 +875,6 @@ def delete_bc1(bc_id):
 
 
 
-
 # Utility function for removing duplicates
 def remove_duplicates(nodes):
     unique_nodes = []
@@ -1011,7 +1009,6 @@ def generate_mesh():
     except Exception as e:
         print(f"Error generating mesh: {e}")
         return jsonify({'status': 'error', 'message': 'Failed to generate mesh.'}), 500
-
 
 
 if __name__ == "__main__":
