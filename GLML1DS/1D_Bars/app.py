@@ -6,6 +6,10 @@ from flask_session import Session
 from math import isclose
 from sympy import symbols, integrate, lambdify, sympify
 import uuid
+import logging
+from logging import StreamHandler
+
+
 
 app = Flask(__name__, static_folder='static')
 
@@ -1009,7 +1013,8 @@ def generate_mesh():
         return jsonify({'status': 'error', 'message': 'Failed to generate mesh.'}), 500
 
 
-
-
 if __name__ == "__main__":
+    handler = StreamHandler()
+    handler.setLevel(logging.INFO)
+    app.logger.addHandler(handler)
     app.run(host='0.0.0.0', port=5000, debug=True)
