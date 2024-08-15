@@ -962,7 +962,7 @@ def generate_mesh():
                 primary_nodes[line[0]] = []
             primary_nodes[line[0]].append({'x': line[1], 'y': line[2]})
             primary_nodes[line[0]].append({'x': line[3], 'y': line[4]})
-        
+
         # Process sing_bodyCons_FE (BC1) data
         for bc in bc_data:
             if bc[0] not in primary_nodes:
@@ -978,15 +978,21 @@ def generate_mesh():
 
         # Process dist_forces_table data
         for dist_force in dist_forces_data:
-            add_secondary_nodes(dist_force[1], dist_force[2], dist_force[3], dist_force[4], 
-                                primary_nodes[dist_force[0]], dist_force[5])
+            if dist_force[0] not in primary_nodes:
+                primary_nodes[dist_force[0]] = []
+            primary_nodes[dist_force[0]].append({'x': dist_force[1], 'y': dist_force[2]})
+            primary_nodes[dist_force[0]].append({'x': dist_force[3], 'y': dist_force[4]})
+            add_secondary_nodes(dist_force[1], dist_force[2], dist_force[3], dist_force[4], primary_nodes[dist_force[0]], dist_force[5])
 
         # Process body_forces_table data
         for body_force in body_forces_data:
-            add_secondary_nodes(body_force[1], body_force[2], body_force[3], body_force[4], 
-                                primary_nodes[body_force[0]], '1', area_function=body_force[5])
+            if body_force[0] not in primary_nodes:
+                primary_nodes[body_force[0]] = []
+            primary_nodes[body_force[0]].append({'x': body_force[1], 'y': body_force[2]})
+            primary_nodes[body_force[0]].append({'x': body_force[3], 'y': body_force[4]})
+            add_secondary_nodes(body_force[1], body_force[2], body_force[3], body_force[4], primary_nodes[body_force[0]], '1', area_function=body_force[5])
 
-        # Process thermal_loads_table data (if needed)
+        # Process thermal_loads_table data
         for thermal_load in thermal_loads_data:
             if thermal_load[0] not in primary_nodes:
                 primary_nodes[thermal_load[0]] = []
@@ -1005,6 +1011,7 @@ def generate_mesh():
     except Exception as e:
         print(f"Error generating mesh: {e}")
         return jsonify({'status': 'error', 'message': 'Failed to generate mesh.'}), 500
+
 
 
 if __name__ == "__main__":
