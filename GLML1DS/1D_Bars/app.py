@@ -6,7 +6,7 @@ from flask_session import Session
 from math import isclose
 from sympy import symbols, integrate, lambdify, sympify
 import uuid
-import numpy as np
+
 
 
 
