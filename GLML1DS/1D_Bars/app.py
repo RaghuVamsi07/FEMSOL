@@ -6,8 +6,6 @@ from flask_session import Session
 from math import isclose
 from sympy import symbols, integrate, lambdify, sympify
 import uuid
-import logging
-from logging import StreamHandler
 
 
 
@@ -1014,7 +1012,4 @@ def generate_mesh():
 
 
 if __name__ == "__main__":
-    handler = StreamHandler()
-    handler.setLevel(logging.INFO)
-    app.logger.addHandler(handler)
     app.run(host='0.0.0.0', port=5000, debug=True)
