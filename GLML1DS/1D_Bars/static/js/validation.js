@@ -15,13 +15,10 @@ function validateAndProceed() {
     let elementTypeSelected = checkElementTypeSelected();
 
     if (!elementTypeSelected) {
-        // Alert the user if no element type is selected
-        alert("Please select either 'Linear' or 'Quadratic' before proceeding.");
-        return;  // Do not proceed
-    }
-
-    // If element type is selected, show a warning about missing constraints
-    if (confirm("No constraints or boundary conditions are specified. This may produce wrong results. Do you want to proceed?")) {
-        window.location.href = "/results";
+        if (confirm("No element type (linear or quadratic) is selected. This may produce wrong results. Do you want to proceed?")) {
+            window.open('/results', '_blank');  // Open results page in a new tab
+        }
+    } else {
+        window.open('/results', '_blank');  // Open results page in a new tab
     }
 }
