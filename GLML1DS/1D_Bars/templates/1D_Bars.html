@@ -314,6 +314,7 @@
     <script src="{{ url_for('static', filename='js/distributive_force_handling.js') }}"></script>
     <script src="{{ url_for('static', filename='js/body_force_handling.js') }}"></script>
     <script src="{{ url_for('static', filename='js/thermal_load_handling.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/validation.js') }}"></script> 
 
 
     <script src="{{ url_for('static', filename='js/bc1.js') }}"></script>
@@ -362,58 +363,6 @@
 
     </script>
 
-
-<script>
-function validateAndProceed() {
-    // Check if at least one line is created
-    let linesCreated = checkLinesCreated();
-    // Check if at least one boundary condition button is selected and has at least one BC specified
-    let bcValid = checkBCCondition();
-    // Check if linear or quadratic button is selected
-    let elementTypeSelected = checkElementTypeSelected();
-
-    if (linesCreated && bcValid && elementTypeSelected) {
-        // Redirect to the results page
-        window.location.href = "/results";
-    } else {
-        alert("Please ensure that you have created at least one line, selected a boundary condition with at least one BC specified, and selected either linear or quadratic elements.");
-    }
-}
-
-function checkLinesCreated() {
-    // Fetch lines from the database (pseudo-code, replace with actual implementation)
-    let lines = fetchFromDatabase("lines_table");
-    return lines.length > 0;
-}
-
-function checkBCCondition() {
-    // Check if any BC button content is visible and has at least one BC specified
-    let bcValid = false;
-
-    // Example checking for BC1 (extend for other BCs as needed)
-    let bcContents = document.querySelectorAll('.bcContent');
-    
-    for (let i = 0; i < bcContents.length; i++) {
-        if (bcContents[i].style.display !== 'none') {
-            // Fetch from database to check if there's a BC specified for the visible BC content
-            let bcData = fetchFromDatabase('sing_bodyCons_FE'); // Replace table name accordingly
-            if (bcData.length > 0) {
-                bcValid = true;
-                break;
-            }
-        }
-    }
-
-    return bcValid;
-}
-
-function checkElementTypeSelected() {
-    // Check if linear or quadratic button is selected
-    let linearSelected = document.getElementById("linear").checked;
-    let quadraticSelected = document.getElementById("quadratic").checked;
-    return linearSelected || quadraticSelected;
-}
-</script>
 
 
 </body>
