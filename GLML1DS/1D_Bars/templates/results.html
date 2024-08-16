@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Results Page</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/results_styles.css') }}">
+     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/results_styles.css') }}">
 </head>
 <body>
 
@@ -15,17 +15,61 @@
 
     <!-- Main Content Area -->
     <main>
-        
-
-        <!-- Second Row (Two Columns) -->
         <div class="row-content">
+            <!-- Left Column -->
             <div class="left-column">
-                <!-- Left column content goes here -->
                 <p>Left column content</p>
             </div>
-            <div class="right-column">
-                <!-- Right column content goes here -->
-                <p>Right column content</p>
+
+            <!-- Middle Columns (2nd to 5th) -->
+            <div class="center-columns">
+                <div class="top-row">
+                    <!-- Color Gradient Scale for Displacement (2nd Column) -->
+                    <div class="displacement-gradient">
+                        <p>Displacement Gradient</p>
+                    </div>
+
+                    <!-- Displacement Canvas (3rd Column) -->
+                    <div class="displacement-canvas">
+                        <canvas id="displacementCanvas"></canvas>
+                    </div>
+
+                    <!-- Color Gradient Scale for Stress (4th Column) -->
+                    <div class="stress-gradient">
+                        <p>Stress Gradient</p>
+                    </div>
+
+                    <!-- Stress Canvas (5th Column) -->
+                    <div class="stress-canvas">
+                        <canvas id="stressCanvas"></canvas>
+                    </div>
+
+
+                </div>
+                <div class="bottom-row">
+                    <!-- Displacement Tools (Merged 2nd & 3rd Columns) -->
+                    <div id="displacementTools" class="displacement-tools">
+                        <button id="zoomIn">Zoom In</button>
+                        <button id="zoomOut">Zoom Out</button>
+                        <button id="translateGrid">Translate</button>
+                        <select id="lineSelect">
+                            <option value="">Select Line</option>
+                            <!-- Line options will be dynamically populated -->
+                        </select>
+                    </div>
+
+                    <!-- Stress Tools (Merged 4th & 5th Columns) -->
+                    <div id="stressTools" class="stress-tools">
+                        <button id="zoomInStress">Zoom In</button>
+                        <button id="zoomOutStress">Zoom Out</button>
+                        <button id="translateGridStress">Translate</button>
+                        <select id="lineSelectStress">
+                            <option value="">Select Line</option>
+                            <!-- Line options will be dynamically populated -->
+                        </select>
+                    </div>
+                </div>
+
             </div>
         </div>
     </main>
@@ -35,6 +79,10 @@
         <p>&copy; 2024 FEM Results</p>
     </footer>
 
-    <script src="{{ url_for('static', filename='js/results_scripts.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/draw_displacement.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/draw_stress.js') }}"></script>
+    
+    
+
 </body>
 </html>
