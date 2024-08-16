@@ -1012,5 +1012,18 @@ def generate_mesh():
         return jsonify({'status': 'error', 'message': 'Failed to generate mesh.'}), 500
 
 
+@app.route('/results')
+def results():
+    # Fetch and compute analysis based on session ID
+    session_id = get_session_id_from_cookie()
+    # Perform the analysis, fetch the results from the database or compute them
+    results_data = perform_analysis(session_id)
+    
+    return render_template('results.html', data=results_data)
+
+
+
+
+
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000, debug=True)
