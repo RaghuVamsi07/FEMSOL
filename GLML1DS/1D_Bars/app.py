@@ -1019,7 +1019,7 @@ def generate_mesh():
 def results():
 
     # Render the results page with the fetched data
-    return render_template('results.html', data=data)
+    return render_template('results.html')
 
 
 
