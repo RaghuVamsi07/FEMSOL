@@ -1017,13 +1017,6 @@ def generate_mesh():
 
 @app.route('/results')
 def results():
-    session_id = get_session_id_from_cookie()  # Use the new function
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM results_table WHERE session_id = %s", (session_id,))
-    data = cursor.fetchall()
-    cursor.close()
-    conn.close()
 
     # Render the results page with the fetched data
     return render_template('results.html', data=data)
