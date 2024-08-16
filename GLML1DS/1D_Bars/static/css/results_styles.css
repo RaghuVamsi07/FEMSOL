@@ -1,65 +1,157 @@
 /* General Page Styling */
-body {
+body, html {
     margin: 0;
+    padding: 0;
+    height: 100%;
     font-family: Arial, sans-serif;
     display: flex;
     flex-direction: column;
-    height: 100vh;
+    overflow: hidden; /* Prevent scrolling of the entire page */
 }
 
 /* Header Styling */
 header {
-    background-color: #333;
+    background-color: #D3D3D3;
     color: #fff;
     text-align: center;
     padding: 1rem;
-    height: 10%;
+    flex-shrink: 0;
+    height: 7%; /* Fixed height for the header */
 }
 
 /* Main Content Area */
 main {
-    flex: 1;
+    flex: 1; /* Fill remaining space between header and footer */
     display: flex;
     flex-direction: column;
+    overflow: hidden; /* Prevent main area from causing page overflow */
 }
 
-/* First Row (Buttons) */
-.row-buttons {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 10%; /* Small height compared to the second row */
-    background-color: #f4f4f4;
-    padding: 1rem;
-}
-
-/* Second Row (Two Columns) */
+/* Row Content (Five Columns Layout) */
 .row-content {
     display: flex;
-    flex: 1; /* This takes up the remaining space */
+    flex: 1;
+    overflow: hidden; /* Prevent the entire row from causing overflow */
 }
 
 /* Left Column */
 .left-column {
-    width: 40%; /* 40% of the page */
+    width: 14%; /* 14% of the page width */
     background-color: #e9ecef;
     padding: 1rem;
     box-sizing: border-box;
+    overflow-y: auto; /* Enable scrolling within the left column */
+    max-height: 100%; /* Ensure it doesn't grow beyond the parent height */
 }
 
-/* Right Column */
-.right-column {
-    width: 60%; /* 60% of the page */
-    background-color: #dee2e6;
-    padding: 1rem;
+/* Center Columns (2nd to 5th Columns) */
+.center-columns {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    overflow: hidden; /* Prevent overflow in the center columns */
+}
+
+/* Top Row (Grids and Color Gradients) */
+.top-row {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+/* Color Gradient for Displacement (2nd Column) */
+.displacement-gradient {
+    width: 2.5%; /* Small width for color gradient */
+    background-color: #f5f5f5;
+    text-align: center;
+    padding: 0.5rem;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+}
+
+/* Displacement Canvas (3rd Column) */
+.displacement-canvas {
+    width: 47.5%; /* Larger width for the canvas */
+    background-color: #ffffff; 
+    display: flex;
+    justify-content: center;
+    align-items: center;
     box-sizing: border-box;
 }
 
+/* Color Gradient for Stress (4th Column) */
+.stress-gradient {
+    width: 2.5%; /* Small width for color gradient */
+    background-color: #f5f5f5;
+    text-align: center;
+    padding: 0.5rem;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+}
+
+/* Stress Canvas (5th Column) */
+.stress-canvas {
+    width: 47.5%; /* Larger width for the canvas */
+    background-color: #ffffff; 
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-sizing: border-box;
+}
+
+/* Bottom Row (Tools) */
+.bottom-row {
+    display: flex;
+    height: 10%; /* Adjust this as needed */
+}
+
+
 /* Footer Styling */
 footer {
-    background-color: #333;
+    background-color: #A9A9A9;
     color: #fff;
     text-align: center;
+    padding: 0.5rem;
+    height: 2%; /* Small, professional footer height */
+    flex-shrink: 0;
+}
+
+
+/* Displacement Tools (Merged 2nd & 3rd Columns) */
+.displacement-tools {
+    width: 50%; /* 50% of the page width */
+    background-color: #e0f7fa;
     padding: 1rem;
-    height: 10%;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+}
+
+/* Stress Tools (Merged 4th & 5th Columns) */
+.stress-tools {
+    width: 50%; /* 50% of the page width */
+    background-color: #e0f7fa;
+    padding: 1rem;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+}
+
+/* Canvas Elements */
+canvas {
+    width: 100%;
+    height: 100%;
+    border: 1px solid #ccc; /* Optional border */
+}
+
+/* Specific for Stress Canvas */
+.stress-canvas canvas {
+    width: 100%;
+    height: 100%;
+    border: 1px solid #ccc; /* Optional border */
+}
+
+/* Specific for Displacement Canvas */
+.displacement-canvas canvas {
+    width: 100%;
+    height: 100%;
+    border: 1px solid #ccc; /* Optional border */
 }
