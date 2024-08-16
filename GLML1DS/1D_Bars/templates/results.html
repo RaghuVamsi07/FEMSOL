@@ -4,12 +4,37 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Results Page</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/results_styles.css') }}">
 </head>
 <body>
+
+    <!-- Header -->
     <header>
         <h1>Results Page</h1>
     </header>
-    
+
+    <!-- Main Content Area -->
+    <main>
+        
+
+        <!-- Second Row (Two Columns) -->
+        <div class="row-content">
+            <div class="left-column">
+                <!-- Left column content goes here -->
+                <p>Left column content</p>
+            </div>
+            <div class="right-column">
+                <!-- Right column content goes here -->
+                <p>Right column content</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2024 FEM Results</p>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/results_scripts.js') }}"></script>
 </body>
 </html>
