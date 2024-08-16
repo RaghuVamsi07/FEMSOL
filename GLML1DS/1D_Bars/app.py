@@ -35,6 +35,8 @@ def get_db_connection():
     conn = mysql.connector.connect(**db_config)
     return conn
 
+def get_session_id_from_cookie():
+    return request.cookies.get('session_id')
 
 @app.route('/')
 def index():
@@ -1012,15 +1014,19 @@ def generate_mesh():
         return jsonify({'status': 'error', 'message': 'Failed to generate mesh.'}), 500
 
 
+
 @app.route('/results')
 def results():
-    # Fetch and compute analysis based on session ID
-    session_id = get_session_id_from_cookie()
-    # Perform the analysis, fetch the results from the database or compute them
-    results_data = perform_analysis(session_id)
-    
-    return render_template('results.html', data=results_data)
+    session_id = get_session_id_from_cookie()  # Use the new function
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM results_table WHERE session_id = %s", (session_id,))
+    data = cursor.fetchall()
+    cursor.close()
+    conn.close()
 
+    # Render the results page with the fetched data
+    return render_template('results.html', data=data)
 
 
 
