@@ -1,8 +1,13 @@
-// Function to check if linear or quadratic button is selected
+let selectedElementType = null;
+
+// Function to set the selected element type when a button is clicked
+function selectElementType(type) {
+    selectedElementType = type;
+}
+
+// Function to check if an element type is selected
 function checkElementTypeSelected() {
-    let linearSelected = document.getElementById("linear").checked;
-    let quadraticSelected = document.getElementById("quadratic").checked;
-    return linearSelected || quadraticSelected;
+    return selectedElementType !== null;
 }
 
 // Main validation function called on button click
@@ -10,12 +15,13 @@ function validateAndProceed() {
     let elementTypeSelected = checkElementTypeSelected();
 
     if (!elementTypeSelected) {
-        // Show a warning if no element type is selected
-        if (confirm("No element type (linear or quadratic) is selected. This may produce wrong results. Do you want to proceed?")) {
-            window.location.href = "/results";
-        }
-    } else {
-        // Proceed to results if the element type is selected
+        // Alert the user if no element type is selected
+        alert("Please select either 'Linear' or 'Quadratic' before proceeding.");
+        return;  // Do not proceed
+    }
+
+    // If element type is selected, show a warning about missing constraints
+    if (confirm("No constraints or boundary conditions are specified. This may produce wrong results. Do you want to proceed?")) {
         window.location.href = "/results";
     }
 }
