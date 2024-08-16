@@ -10,58 +10,6 @@
     <header>
         <h1>Results Page</h1>
     </header>
-    <main>
-        <button onclick="plotData()">Plot Data</button>
-        <div id="plot-container"></div>
-        <div>
-            <h3>Check Deformation at a Point</h3>
-            <label for="pointX">X:</label>
-            <input type="number" id="pointX" name="pointX">
-            <label for="pointY">Y:</label>
-            <input type="number" id="pointY" name="pointY">
-            <button onclick="checkDeformation()">Check Deformation</button>
-            <p id="deformationResult"></p>
-        </div>
-    </main>
-    <script>
-        function plotData() {
-            fetch('http://127.0.0.1:5001/calculate-deformation', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    const img = new Image();
-                    img.src = 'data:image/png;base64,' + data.image;
-                    document.getElementById('plot-container').appendChild(img);
-                } else {
-                    alert('Error: ' + data.message);
-                }
-            })
-            .catch(error => console.error('Error:', error));
-        }
-
-        function checkDeformation() {
-            const x = document.getElementById('pointX').value;
-            const y = document.getElementById('pointY').value;
-            fetch('http://127.0.0.1:5001/check-deformation', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ x: x, y: y })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    document.getElementById('deformationResult').textContent = `Deformation at (${x}, ${y}): ${data.deformation}`;
-                } else {
-                    alert('Error: ' + data.message);
-                }
-            })
-            .catch(error => console.error('Error:', error));
-        }
-    </script>
+    
 </body>
 </html>
