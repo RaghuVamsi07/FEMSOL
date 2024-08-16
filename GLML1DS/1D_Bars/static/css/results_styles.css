@@ -1,0 +1,65 @@
+/* General Page Styling */
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+/* Header Styling */
+header {
+    background-color: #333;
+    color: #fff;
+    text-align: center;
+    padding: 1rem;
+    height: 10%;
+}
+
+/* Main Content Area */
+main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+/* First Row (Buttons) */
+.row-buttons {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 10%; /* Small height compared to the second row */
+    background-color: #f4f4f4;
+    padding: 1rem;
+}
+
+/* Second Row (Two Columns) */
+.row-content {
+    display: flex;
+    flex: 1; /* This takes up the remaining space */
+}
+
+/* Left Column */
+.left-column {
+    width: 40%; /* 40% of the page */
+    background-color: #e9ecef;
+    padding: 1rem;
+    box-sizing: border-box;
+}
+
+/* Right Column */
+.right-column {
+    width: 60%; /* 60% of the page */
+    background-color: #dee2e6;
+    padding: 1rem;
+    box-sizing: border-box;
+}
+
+/* Footer Styling */
+footer {
+    background-color: #333;
+    color: #fff;
+    text-align: center;
+    padding: 1rem;
+    height: 10%;
+}
