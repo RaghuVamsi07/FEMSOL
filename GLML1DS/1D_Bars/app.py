@@ -922,6 +922,66 @@ def add_secondary_nodes(x1, y1, x2, y2, primary_nodes, force_function=None, area
             new_y = y1 + i * dy
             primary_nodes.append({'x': new_x, 'y': new_y})
 
+
+
+def calculate_slope_and_identify_start(line):
+    line_num, x1, y1, x2, y2 = line
+    
+    # Explicitly check for vertical line
+    if x1 == x2:  # Vertical line
+        slope = float('inf')
+        y1_new = y1 + 0.01
+        y2_new = y2 + 0.01
+        
+        inside_start = (min(y1, y2) <= y1_new <= max(y1, y2))
+        inside_end = (min(y1, y2) <= y2_new <= max(y1, y2))
+
+        # Determine the first element starting point for vertical line
+        if inside_start and not inside_end:
+            return (x1, y1, x2, y2)
+        elif inside_end and not inside_start:
+            return (x1, y1, x2, y2)
+        else:
+            return (x1, y1, x2, y2)  # Return original points if both perturbed points are outside
+
+    # For non-vertical lines, proceed as before
+    if x2 - x1 != 0:
+        slope = (y2 - y1) / (x2 - x1)
+    else:
+        slope = 0  # Handle potential floating-point anomalies
+
+    x1_new, y1_new, x2_new, y2_new = x1, y1, x2, y2
+    
+    if slope > 0:  # Positive slope
+        x1_new += 0.01
+        x2_new += 0.01
+        y1_new = y1 + 0.01 * slope
+        y2_new = y2 + 0.01 * slope
+    
+    elif slope < 0:  # Negative slope
+        x1_new -= 0.01
+        x2_new -= 0.01
+        y1_new = y1 + 0.01 * (-slope)
+        y2_new = y2 + 0.01 * (-slope)
+    
+    elif slope == 0:  # Horizontal line (slope is zero)
+        x1_new += 0.01
+        x2_new += 0.01
+    
+    # Check if the new points are inside the original line
+    inside_start = min(x1, x2) <= x1_new <= max(x1, x2) and min(y1, y2) <= y1_new <= max(y1, y2)
+    inside_end = min(x1, x2) <= x2_new <= max(x1, x2) and min(y1, y2) <= y2_new <= max(y1, y2)
+
+    # Determine the first element starting point
+    if inside_start and not inside_end:
+        return (x1, y1, x2, y2)
+    elif inside_end and not inside_start:
+        return (x1, y1, x2, y2)
+    else:
+        return (x1, y1, x2, y2)  # Return original points if both perturbed points are outside
+
+
+
 @app.route('/generate-mesh', methods=['POST'])
 def generate_mesh():
     data = request.json
@@ -1005,8 +1065,20 @@ def generate_mesh():
         for line_num in primary_nodes:
             primary_nodes[line_num] = remove_duplicates(primary_nodes[line_num])
 
+
+
+        # Sort nodes and create sorted output
+        for line_num, nodes in primary_nodes.items():
+            sorted_nodes = sorted(nodes, key=lambda node: (node['x'], node['y']))
+            sorted_data.append(f"Line {line_num}:")
+            for node in sorted_nodes:
+                sorted_data.append(f"Node at x = {node['x']}, y = {node['y']}")
+        
+
         cursor.close()
         conn.close()
+
+        return render_template('mesh_output.html', sorted_data="\n".join(sorted_data))
 
         return jsonify({'status': 'success', 'primary_nodes': primary_nodes})
 
@@ -1021,7 +1093,13 @@ def results():
     # Render the results page with the fetched data
     return render_template('results.html')
 
-
+@app.route('/output')
+def output():
+    # Replace this with the actual logic to generate the sorted data
+    sorted_data = "Here will be your sorted and perturbed node data."
+    
+    # Render the template and pass the data
+    return render_template('mesh_output.html', sorted_data=sorted_data)
 
 
 if __name__ == "__main__":
