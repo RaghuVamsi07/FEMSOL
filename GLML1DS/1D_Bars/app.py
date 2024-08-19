@@ -980,7 +980,6 @@ def calculate_slope_and_identify_start(line):
     else:
         return (x1, y1, x2, y2)  # Return original points if both perturbed points are outside
 
-
 @app.route('/generate-mesh', methods=['POST'])
 def generate_mesh():
     data = request.json
@@ -1064,21 +1063,10 @@ def generate_mesh():
         for line_num in primary_nodes:
             primary_nodes[line_num] = remove_duplicates(primary_nodes[line_num])
 
-        # Sort nodes and create sorted output
-        sorted_data = []
-        for line_num, nodes in primary_nodes.items():
-            sorted_nodes = sorted(nodes, key=lambda node: (node['x'], node['y']))
-            sorted_data.append(f"Line {line_num}:")
-            for node in sorted_nodes:
-                sorted_data.append(f"Node at x = {node['x']}, y = {node['y']}")
-
         cursor.close()
         conn.close()
 
-        if data.get('return_type') == 'html':
-            return render_template('mesh_output.html', sorted_data="\n".join(sorted_data))
-        else:
-            return jsonify({'status': 'success', 'primary_nodes': primary_nodes})
+        return jsonify({'status': 'success', 'primary_nodes': primary_nodes})
 
     except Exception as e:
         print(f"Error generating mesh: {e}")
@@ -1090,6 +1078,110 @@ def results():
 
     # Render the results page with the fetched data
     return render_template('results.html')
+
+
+
+@app.route('/process-mesh-output', methods=['POST'])
+def process_mesh_output():
+    data = request.json
+    session_id = data['session_id']
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Fetch data from lines_table
+        cursor.execute("SELECT line_num, x1, y1, x2, y2 FROM lines_table WHERE session_id=%s", (session_id,))
+        lines_data = cursor.fetchall()
+
+        # Fetch data from sing_bodyCons_FE table (BC1 data)
+        cursor.execute("SELECT line_num, BC_num, x1, y1, x2, y2 FROM sing_bodyCons_FE WHERE session_id=%s", (session_id,))
+        bc_data = cursor.fetchall()
+
+        # Fetch data from forces_table
+        cursor.execute("SELECT line_num, fx, fy, x, y FROM forces_table WHERE session_id=%s", (session_id,))
+        forces_data = cursor.fetchall()
+
+        # Fetch data from dist_forces_table
+        cursor.execute("SELECT line_num, x1, y1, x2, y2, force_dist FROM dist_forces_table WHERE session_id=%s", (session_id,))
+        dist_forces_data = cursor.fetchall()
+
+        # Fetch data from body_forces_table
+        cursor.execute("SELECT line_num, x_bf1, y_bf1, x_bf2, y_bf2, area FROM body_forces_table WHERE session_id=%s", (session_id,))
+        body_forces_data = cursor.fetchall()
+
+        # Fetch data from thermal_loads_table
+        cursor.execute("SELECT line_num, xt1, yt1, xt2, yt2, alpha, T FROM thermal_loads_table WHERE session_id=%s", (session_id,))
+        thermal_loads_data = cursor.fetchall()
+
+        primary_nodes = {}
+        sorted_data = []
+
+        # Process lines_table data
+        for line in lines_data:
+            if line[0] not in primary_nodes:
+                primary_nodes[line[0]] = []
+            primary_nodes[line[0]].append({'x': line[1], 'y': line[2]})
+            primary_nodes[line[0]].append({'x': line[3], 'y': line[4]})
+
+        # Process sing_bodyCons_FE (BC1) data
+        for bc in bc_data:
+            if bc[0] not in primary_nodes:
+                primary_nodes[bc[0]] = []
+            primary_nodes[bc[0]].append({'x': bc[2], 'y': bc[3]})
+            primary_nodes[bc[0]].append({'x': bc[4], 'y': bc[5]})
+
+        # Process forces_table data
+        for force in forces_data:
+            if force[0] not in primary_nodes:
+                primary_nodes[force[0]] = []
+            primary_nodes[force[0]].append({'x': force[3], 'y': force[4]})
+
+        # Process dist_forces_table data
+        for dist_force in dist_forces_data:
+            if dist_force[0] not in primary_nodes:
+                primary_nodes[dist_force[0]] = []
+            primary_nodes[dist_force[0]].append({'x': dist_force[1], 'y': dist_force[2]})
+            primary_nodes[dist_force[0]].append({'x': dist_force[3], 'y': dist_force[4]})
+            add_secondary_nodes(dist_force[1], dist_force[2], dist_force[3], dist_force[4], primary_nodes[dist_force[0]], force_function=dist_force[5])
+
+        # Process body_forces_table data
+        for body_force in body_forces_data:
+            if body_force[0] not in primary_nodes:
+                primary_nodes[body_force[0]] = []
+            primary_nodes[body_force[0]].append({'x': body_force[1], 'y': body_force[2]})
+            primary_nodes[body_force[0]].append({'x': body_force[3], 'y': body_force[4]})
+            add_secondary_nodes(body_force[1], body_force[2], body_force[3], body_force[4], primary_nodes[body_force[0]], area_function=body_force[5])
+
+        # Process thermal_loads_table data
+        for thermal_load in thermal_loads_data:
+            if thermal_load[0] not in primary_nodes:
+                primary_nodes[thermal_load[0]] = []
+            primary_nodes[thermal_load[0]].append({'x': thermal_load[1], 'y': thermal_load[2]})
+            primary_nodes[thermal_load[0]].append({'x': thermal_load[3], 'y': thermal_load[4]})
+
+        # Remove duplicate nodes
+        for line_num in primary_nodes:
+            primary_nodes[line_num] = remove_duplicates(primary_nodes[line_num])
+
+        # Sort nodes and create sorted output
+        for line_num, nodes in primary_nodes.items():
+            sorted_nodes = sorted(nodes, key=lambda node: (node['x'], node['y']))
+            sorted_data.append(f"Line {line_num}:")
+            for node in sorted_nodes:
+                sorted_data.append(f"Node at x = {node['x']}, y = {node['y']}")
+
+        cursor.close()
+        conn.close()
+
+        # Render the mesh output template with the sorted data
+        return render_template('mesh_output.html', sorted_data="\n".join(sorted_data))
+
+    except Exception as e:
+        print(f"Error processing mesh output: {e}")
+        return jsonify({'status': 'error', 'message': 'Failed to process mesh output.'}), 500
+
+
 
 @app.route('/output')
 def output():
