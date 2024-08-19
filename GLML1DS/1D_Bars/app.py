@@ -891,32 +891,33 @@ def remove_duplicates(nodes):
 
     return unique_nodes
 
-# Function to integrate force or area functions over a segment
-def integrate_function(function_expression, x_start, x_end):
+# Function to integrate area function over a segment
+def integrate_area_function(area_function, x_start, x_end):
     x = symbols('x')
-    func = lambdify(x, sympify(function_expression), 'numpy')
-    return integrate(func(x), (x, x_start, x_end))
+    area_func = lambdify(x, sympify(area_function), 'numpy')
+    area_integral = integrate(area_func(x), (x, x_start, x_end))
+    return area_integral
+
+# Function to integrate force function over a segment
+def integrate_force_function(force_function, x_start, x_end):
+    x = symbols('x')
+    force_func = lambdify(x, sympify(force_function), 'numpy')
+    force_integral = integrate(force_func(x), (x, x_start, x_end))
+    return force_integral
 
 # Function to add secondary nodes based on force distribution and area variation
-def add_secondary_nodes(x1, y1, x2, y2, primary_nodes, force_function, area_function=None):
-    # Integrate the force and area functions over the segment
-    total_force = integrate_function(force_function, x1, x2)
+def add_secondary_nodes(x1, y1, x2, y2, primary_nodes, force_function=None, area_function=None):
+    total_force = integrate_force_function(force_function, x1, x2) if force_function else 1
+    total_area = integrate_area_function(area_function, x1, x2) if area_function else 1
     
-    # If area_function is provided, consider its effect as well
-    if area_function:
-        total_area_variation = integrate_function(area_function, x1, x2)
-        total_effect = total_force * total_area_variation
-    else:
-        total_effect = total_force
+    total_effect = total_force * total_area
+    num_subdivisions = max(2, int(total_effect ** 0.5))
     
-    # Determine the number of secondary nodes based on total effect
-    n_total = max(2, int(total_effect ** 0.5))  # Adjust subdivision based on square root of the effect
-    
-    if n_total > 1:
-        dx = (x2 - x1) / n_total
-        dy = (y2 - y1) / n_total
-        
-        for i in range(1, n_total):
+    if num_subdivisions > 1:
+        dx = (x2 - x1) / num_subdivisions
+        dy = (y2 - y1) / num_subdivisions
+
+        for i in range(1, num_subdivisions):
             new_x = x1 + i * dx
             new_y = y1 + i * dy
             primary_nodes.append({'x': new_x, 'y': new_y})
@@ -951,7 +952,7 @@ def generate_mesh():
         body_forces_data = cursor.fetchall()
 
         # Fetch data from thermal_loads_table
-        cursor.execute("SELECT line_num, xt1, yt1, xt2, yt2 FROM thermal_loads_table WHERE session_id=%s", (session_id,))
+        cursor.execute("SELECT line_num, xt1, yt1, xt2, yt2, alpha, T FROM thermal_loads_table WHERE session_id=%s", (session_id,))
         thermal_loads_data = cursor.fetchall()
 
         # Combine the data and remove duplicates (server-side processing)
@@ -983,7 +984,7 @@ def generate_mesh():
                 primary_nodes[dist_force[0]] = []
             primary_nodes[dist_force[0]].append({'x': dist_force[1], 'y': dist_force[2]})
             primary_nodes[dist_force[0]].append({'x': dist_force[3], 'y': dist_force[4]})
-            add_secondary_nodes(dist_force[1], dist_force[2], dist_force[3], dist_force[4], primary_nodes[dist_force[0]], dist_force[5])
+            add_secondary_nodes(dist_force[1], dist_force[2], dist_force[3], dist_force[4], primary_nodes[dist_force[0]], force_function=dist_force[5])
 
         # Process body_forces_table data
         for body_force in body_forces_data:
@@ -991,7 +992,7 @@ def generate_mesh():
                 primary_nodes[body_force[0]] = []
             primary_nodes[body_force[0]].append({'x': body_force[1], 'y': body_force[2]})
             primary_nodes[body_force[0]].append({'x': body_force[3], 'y': body_force[4]})
-            add_secondary_nodes(body_force[1], body_force[2], body_force[3], body_force[4], primary_nodes[body_force[0]], '1', area_function=body_force[5])
+            add_secondary_nodes(body_force[1], body_force[2], body_force[3], body_force[4], primary_nodes[body_force[0]], area_function=body_force[5])
 
         # Process thermal_loads_table data
         for thermal_load in thermal_loads_data:
@@ -1012,7 +1013,6 @@ def generate_mesh():
     except Exception as e:
         print(f"Error generating mesh: {e}")
         return jsonify({'status': 'error', 'message': 'Failed to generate mesh.'}), 500
-
 
 
 @app.route('/results')
