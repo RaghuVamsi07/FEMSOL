@@ -1065,22 +1065,18 @@ def generate_mesh():
         for line_num in primary_nodes:
             primary_nodes[line_num] = remove_duplicates(primary_nodes[line_num])
 
-
-
         # Sort nodes and create sorted output
+        sorted_data = []
         for line_num, nodes in primary_nodes.items():
             sorted_nodes = sorted(nodes, key=lambda node: (node['x'], node['y']))
             sorted_data.append(f"Line {line_num}:")
             for node in sorted_nodes:
                 sorted_data.append(f"Node at x = {node['x']}, y = {node['y']}")
-        
 
         cursor.close()
         conn.close()
 
         return render_template('mesh_output.html', sorted_data="\n".join(sorted_data))
-
-        return jsonify({'status': 'success', 'primary_nodes': primary_nodes})
 
     except Exception as e:
         print(f"Error generating mesh: {e}")
