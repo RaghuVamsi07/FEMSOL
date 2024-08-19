@@ -19,6 +19,7 @@
             <!-- Left Column -->
             <div class="left-column">
                 <p>Left column content</p>
+                <button id="outputButton">View Output</button>
             </div>
 
             <!-- Middle Columns (2nd to 5th) -->
@@ -82,7 +83,11 @@
     <script src="{{ url_for('static', filename='js/draw_displacement.js') }}"></script>
     <script src="{{ url_for('static', filename='js/draw_stress.js') }}"></script>
     
-    
+     <script>
+        document.getElementById('outputButton').addEventListener('click', function() {
+            window.open('/output', '_blank');
+        });
+    </script>
 
 </body>
 </html>
