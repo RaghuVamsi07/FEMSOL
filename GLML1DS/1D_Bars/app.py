@@ -981,7 +981,6 @@ def calculate_slope_and_identify_start(line):
         return (x1, y1, x2, y2)  # Return original points if both perturbed points are outside
 
 
-
 @app.route('/generate-mesh', methods=['POST'])
 def generate_mesh():
     data = request.json
@@ -1076,7 +1075,10 @@ def generate_mesh():
         cursor.close()
         conn.close()
 
-        return render_template('mesh_output.html', sorted_data="\n".join(sorted_data))
+        if data.get('return_type') == 'html':
+            return render_template('mesh_output.html', sorted_data="\n".join(sorted_data))
+        else:
+            return jsonify({'status': 'success', 'primary_nodes': primary_nodes})
 
     except Exception as e:
         print(f"Error generating mesh: {e}")
