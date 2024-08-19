@@ -19,7 +19,7 @@
             <!-- Left Column -->
             <div class="left-column">
                 <p>Left column content</p>
-                <button id="outputButton">View Output</button>
+                <button onclick="processMeshOutput()">Show Mesh Output</button>
             </div>
 
             <!-- Middle Columns (2nd to 5th) -->
@@ -84,10 +84,31 @@
     <script src="{{ url_for('static', filename='js/draw_stress.js') }}"></script>
     
      <script>
-        document.getElementById('outputButton').addEventListener('click', function() {
-            window.open('/output', '_blank');
-        });
-    </script>
+function processMeshOutput() {
+    // Replace the following line with the actual data you need to send
+    const sessionData = {
+        session_id: 'your_session_id_here'
+    };
 
+    fetch('/process-mesh-output', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(sessionData),
+    })
+    .then(response => {
+        if (response.redirected) {
+            window.location.href = response.url;
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+</script>
+
+
+
+
+    
 </body>
 </html>
