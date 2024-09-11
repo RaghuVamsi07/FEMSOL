@@ -8,6 +8,11 @@ from sympy import symbols, integrate, lambdify, sympify
 import uuid
 import numpy as np
 
+from sympy import symbols, integrate, lambdify, sympify, sqrt, Abs, zeros
+from scipy.integrate import quad
+from sympy import symbols, lambdify, sympify, Abs, sqrt, integrate
+
+
 
 
 app = Flask(__name__, static_folder='static')
@@ -878,51 +883,6 @@ def delete_bc1(bc_id):
 
 
 
-# Utility function for removing duplicates
-def remove_duplicates(nodes):
-    unique_nodes = []
-    seen = set()
-
-    for node in nodes:
-        coord = (node['x'], node['y'])
-        if coord not in seen:
-            unique_nodes.append(node)
-            seen.add(coord)
-
-    return unique_nodes
-
-# Function to integrate area function over a segment
-def integrate_area_function(area_function, x_start, x_end):
-    x = symbols('x')
-    area_func = lambdify(x, sympify(area_function), 'numpy')
-    area_integral = integrate(area_func(x), (x, x_start, x_end))
-    return area_integral
-
-# Function to integrate force function over a segment
-def integrate_force_function(force_function, x_start, x_end):
-    x = symbols('x')
-    force_func = lambdify(x, sympify(force_function), 'numpy')
-    force_integral = integrate(force_func(x), (x, x_start, x_end))
-    return force_integral
-
-# Function to add secondary nodes based on force distribution and area variation
-def add_secondary_nodes(x1, y1, x2, y2, primary_nodes, force_function=None, area_function=None):
-    total_force = integrate_force_function(force_function, x1, x2) if force_function else 1
-    total_area = integrate_area_function(area_function, x1, x2) if area_function else 1
-    
-    total_effect = total_force * total_area
-    num_subdivisions = max(2, int(total_effect ** 0.5))
-    
-    if num_subdivisions > 1:
-        dx = (x2 - x1) / num_subdivisions
-        dy = (y2 - y1) / num_subdivisions
-
-        for i in range(1, num_subdivisions):
-            new_x = x1 + i * dx
-            new_y = y1 + i * dy
-            primary_nodes.append({'x': new_x, 'y': new_y})
-
-
 @app.route('/generate-mesh', methods=['POST'])
 def generate_mesh():
     data = request.json
@@ -949,13 +909,166 @@ def generate_mesh():
         dist_forces_data = cursor.fetchall()
 
         # Fetch data from body_forces_table
-        cursor.execute("SELECT line_num, x_bf1, y_bf1, x_bf2, y_bf2, area FROM body_forces_table WHERE session_id=%s", (session_id,))
+        cursor.execute("SELECT line_num, x_bf1, y_bf1, x_bf2, y_bf2, E, dens_val, area FROM body_forces_table WHERE session_id=%s", (session_id,))
         body_forces_data = cursor.fetchall()
 
         # Fetch data from thermal_loads_table
         cursor.execute("SELECT line_num, xt1, yt1, xt2, yt2, alpha, T FROM thermal_loads_table WHERE session_id=%s", (session_id,))
         thermal_loads_data = cursor.fetchall()
 
+
+        def round_coords(x, y):
+            return round(x, 3), round(y, 3)
+        
+        # Utility function for removing duplicates
+        def remove_duplicates(nodes):
+            unique_nodes = []
+            seen = set()
+        
+            for node in nodes:
+                coord = round_coords(node['x'], node['y'])
+                if coord not in seen:
+                    unique_nodes.append(node)
+                    seen.add(coord)
+        
+            return unique_nodes
+        
+        # Function to calculate the length (axial coordinate)
+        def calculate_axial_length(x1, y1, x2, y2):
+            return sqrt(x1**2 + y1**2), sqrt(x2**2 + y2**2)
+        
+        # Function to integrate the thermal load
+        def integrate_thermal_load(E, area_function, alpha, temperature, x1, y1, x2, y2, body_force_coords):
+            l1, l2 = calculate_axial_length(x1, y1, x2, y2)
+            x = symbols('x')
+            area_func = lambdify(x, sympify(area_function), 'numpy')
+        
+            # Check if both nodes have the same area function in body force coordinates
+            for coords in body_force_coords:
+                if coords['area_function'] == area_function:
+                    thermal_integral = integrate(
+                        E * alpha * temperature * area_func(x),
+                        (x, l1, l2)
+                    )
+                    return thermal_integral
+            return 0  # No matching area function, return zero influence
+        
+        # Function to integrate distributive force function over a segment
+        def integrate_distributive_force_function(force_dist, l1, l2):
+            x = symbols('x')
+            force_func = lambdify(x, sympify(force_dist), 'numpy')
+            force_integral = integrate(force_func(x), (x, l1, l2))
+            return force_integral
+        
+        # Function to integrate body force over a segment
+        def integrate_body_force(dens_val, gravity, x1, y1, x2, y2, area_function):
+            l1, l2 = calculate_axial_length(x1, y1, x2, y2)
+            x = symbols('x')
+            area_func = lambdify(x, sympify(area_function), 'numpy')
+            
+            if x1 == 0 and x2 == 0 and y1 == 0 and y2 == 0:
+                cos_theta = 0
+            else:
+                cos_theta = Abs((y2 - y1) / sqrt((x2 - x1)**2 + (y1 - y2)**2))
+        
+            body_force_integral = integrate(
+                dens_val * gravity * cos_theta * area_func(x),
+                (x, l1, l2)
+            )
+            return body_force_integral
+        
+        # Function to add secondary nodes based on force distribution, area variation, and thermal load
+        def add_secondary_nodes(x1, y1, x2, y2, primary_nodes, force_function=None, area_function=None, dens_val=None, gravity=9.81, E=None, alpha=None, temperature=None, body_force_coords=None):
+            l1, l2 = calculate_axial_length(x1, y1, x2, y2)
+        
+            total_distributive_force = integrate_distributive_force_function(force_function, l1, l2) if force_function else 0
+            total_body_force = integrate_body_force(dens_val, gravity, x1, y1, x2, y2, area_function) if dens_val and area_function else 0
+            total_thermal_load = integrate_thermal_load(E, area_function, alpha, temperature, x1, y1, x2, y2, body_force_coords) if E and alpha and temperature and area_function else 0
+            total_effect = total_distributive_force + total_body_force + total_thermal_load
+        
+            if total_body_force == 0 and area_function is not None:
+                if {'x': round_coords(x1, y1)[0], 'y': round_coords(x1, y1)[1]} not in primary_nodes:
+                    primary_nodes.insert(0, {'x': round_coords(x1, y1)[0], 'y': round_coords(x1, y1)[1]})
+                if {'x': round_coords(x2, y2)[0], 'y': round_coords(x2, y2)[1]} not in primary_nodes:
+                    primary_nodes.append({'x': round_coords(x2, y2)[0], 'y': round_coords(x2, y2)[1]})
+                return
+        
+            if total_effect == 0:
+                return
+        
+            num_subdivisions = max(2, int(total_effect ** 0.5))
+        
+            if num_subdivisions > 1:
+                dx = (x2 - x1) / num_subdivisions
+                dy = (y2 - y1) / num_subdivisions
+        
+                for i in range(1, num_subdivisions):
+                    new_x = x1 + i * dx
+                    new_y = y1 + i * dy
+                    primary_nodes.append({'x': round_coords(new_x, new_y)[0], 'y': round_coords(new_x, new_y)[1]})
+        
+            if {'x': round_coords(x1, y1)[0], 'y': round_coords(x1, y1)[1]} not in primary_nodes:
+                primary_nodes.insert(0, {'x': round_coords(x1, y1)[0], 'y': round_coords(x1, y1)[1]})
+            if {'x': round_coords(x2, y2)[0], 'y': round_coords(x2, y2)[1]} not in primary_nodes:
+                primary_nodes.append({'x': round_coords(x2, y2)[0], 'y': round_coords(x2, y2)[1]})
+        
+        def calculate_distance(x_start, y_start, x, y):
+            return sqrt((x - x_start) ** 2 + (y - y_start) ** 2)
+        
+        # Function to sort nodes based on the distance from the starting point
+        def sort_nodes_by_distance(start_point, nodes):
+            x_start, y_start = start_point
+            return sorted(nodes, key=lambda node: calculate_distance(x_start, y_start, node['x'], node['y']))
+        
+        # Function to calculate slope and identify the starting point
+        def calculate_slope_and_identify_start(line):
+            line_num, x1, y1, x2, y2 = line
+        
+            # Explicitly check for vertical line
+            if x1 == x2:  # Vertical line
+                slope = float('inf')
+                y1_new = y1 + 0.01
+                y2_new = y2 + 0.01
+        
+                inside_start = (min(y1, y2) <= y1_new <= max(y1, y2))
+                inside_end = (min(y1, y2) <= y2_new <= max(y1, y2))
+        
+                # Determine the first element starting point for vertical line
+                if inside_start and not inside_end:
+                    return (x1, y1)
+                elif inside_end and not inside_start:
+                    return (x2, y2)
+                else:
+                    return (x1, y1)  # Return original points if both perturbed points are outside
+        
+            # For non-vertical lines, proceed as before
+            slope = (y2 - y1) / (x2 - x1) if x2 - x1 != 0 else 0
+        
+            if slope > 0:  # Positive slope
+                x1_new, y1_new = x1 + 0.01, y1 + 0.01 * slope
+                x2_new, y2_new = x2 + 0.01, y2 + 0.01 * slope
+        
+            elif slope < 0:  # Negative slope
+                x1_new, y1_new = x1 - 0.01, y1 + 0.01 * (-slope)
+                x2_new, y2_new = x2 - 0.01, y2 + 0.01 * (-slope)
+        
+            else:  # Horizontal line (slope is zero)
+                x1_new, x2_new = x1 + 0.01, x2 + 0.01
+                y1_new, y2_new = y1, y2
+        
+            inside_start = min(x1, x2) <= x1_new <= max(x1, x2) and min(y1, y2) <= y1_new <= max(y1, y2)
+            inside_end = min(x1, x2) <= x2_new <= max(x1, x2) and min(y1, y2) <= y2_new <= max(y1, y2)
+        
+            if inside_start and not inside_end:
+                return (x1, y1)
+            elif inside_end and not inside_start:
+                return (x2, y2)
+            else:
+                return (x1, y1)  # Return original points if both perturbed points are outside
+        def is_within_limits(x, y, x_start, y_start, x_end, y_end):
+            return (min(x_start, x_end) <= x <= max(x_start, x_end)) and (min(y_start, y_end) <= y <= max(y_start, y_end))
+        
+        
         # Combine the data and remove duplicates (server-side processing)
         primary_nodes = {}
         
@@ -965,7 +1078,7 @@ def generate_mesh():
                 primary_nodes[line[0]] = []
             primary_nodes[line[0]].append({'x': line[1], 'y': line[2]})
             primary_nodes[line[0]].append({'x': line[3], 'y': line[4]})
-
+            
         # Process sing_bodyCons_FE (BC1) data
         for bc in bc_data:
             if bc[0] not in primary_nodes:
@@ -986,6 +1099,7 @@ def generate_mesh():
             primary_nodes[dist_force[0]].append({'x': dist_force[1], 'y': dist_force[2]})
             primary_nodes[dist_force[0]].append({'x': dist_force[3], 'y': dist_force[4]})
             add_secondary_nodes(dist_force[1], dist_force[2], dist_force[3], dist_force[4], primary_nodes[dist_force[0]], force_function=dist_force[5])
+            
 
         # Process body_forces_table data
         for body_force in body_forces_data:
@@ -993,7 +1107,8 @@ def generate_mesh():
                 primary_nodes[body_force[0]] = []
             primary_nodes[body_force[0]].append({'x': body_force[1], 'y': body_force[2]})
             primary_nodes[body_force[0]].append({'x': body_force[3], 'y': body_force[4]})
-            add_secondary_nodes(body_force[1], body_force[2], body_force[3], body_force[4], primary_nodes[body_force[0]], area_function=body_force[5])
+            add_secondary_nodes(body_force[1], body_force[2], body_force[3], body_force[4], primary_nodes[body_force[0]], area_function=body_force[7], dens_val=body_force[6])
+
 
         # Process thermal_loads_table data
         for thermal_load in thermal_loads_data:
@@ -1001,203 +1116,33 @@ def generate_mesh():
                 primary_nodes[thermal_load[0]] = []
             primary_nodes[thermal_load[0]].append({'x': thermal_load[1], 'y': thermal_load[2]})
             primary_nodes[thermal_load[0]].append({'x': thermal_load[3], 'y': thermal_load[4]})
-        
-        # Remove duplicate nodes
+            add_secondary_nodes(thermal_load[1], thermal_load[2], thermal_load[3], thermal_load[4], primary_nodes[thermal_load[0]])
+
+
+      
+
+# Function to remove duplicates and filter nodes within the line's co-limits
         for line_num in primary_nodes:
             primary_nodes[line_num] = remove_duplicates(primary_nodes[line_num])
 
-        cursor.close()
-        conn.close()
+            line_start = next(line for line in lines_data if line[0] == line_num)
+            x_start, y_start = line_start[1], line_start[2]
+            x_end, y_end = line_start[3], line_start[4]
 
-        return jsonify({'status': 'success', 'primary_nodes': primary_nodes})
+            primary_nodes[line_num] = [
+                node for node in primary_nodes[line_num] 
+                if is_within_limits(node['x'], node['y'], x_start, y_start, x_end, y_end)
+                ]
 
     except Exception as e:
         print(f"Error generating mesh: {e}")
         return jsonify({'status': 'error', 'message': 'Failed to generate mesh.'}), 500
-
 
 @app.route('/results')
 def results():
 
     # Render the results page with the fetched data
     return render_template('results.html')
-
-
-@app.route('/process-mesh-output', methods=['POST'])
-def process_mesh_output():
-    data = request.json
-    session_id = data['session_id']
-
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-
-        # Fetch data from lines_table
-        cursor.execute("SELECT line_num, x1, y1, x2, y2 FROM lines_table WHERE session_id=%s", (session_id,))
-        lines_data = cursor.fetchall()
-
-        # Fetch data from sing_bodyCons_FE table (BC1 data)
-        cursor.execute("SELECT line_num, BC_num, x1, y1, x2, y2 FROM sing_bodyCons_FE WHERE session_id=%s", (session_id,))
-        bc_data = cursor.fetchall()
-
-        # Fetch data from forces_table
-        cursor.execute("SELECT line_num, fx, fy, x, y FROM forces_table WHERE session_id=%s", (session_id,))
-        forces_data = cursor.fetchall()
-
-        # Fetch data from dist_forces_table
-        cursor.execute("SELECT line_num, x1, y1, x2, y2, force_dist FROM dist_forces_table WHERE session_id=%s", (session_id,))
-        dist_forces_data = cursor.fetchall()
-
-        # Fetch data from body_forces_table
-        cursor.execute("SELECT line_num, x_bf1, y_bf1, x_bf2, y_bf2, area FROM body_forces_table WHERE session_id=%s", (session_id,))
-        body_forces_data = cursor.fetchall()
-
-        # Fetch data from thermal_loads_table
-        cursor.execute("SELECT line_num, xt1, yt1, xt2, yt2, alpha, T FROM thermal_loads_table WHERE session_id=%s", (session_id,))
-        thermal_loads_data = cursor.fetchall()
-
-        primary_nodes = {}
-        sorted_data = []
-
-        # Process lines_table data
-        for line in lines_data:
-            line_num, x1, y1, x2, y2 = calculate_slope_and_identify_start(line)
-            if line[0] not in primary_nodes:
-                primary_nodes[line[0]] = []
-            primary_nodes[line[0]].append({'x': x1, 'y': y1})
-            primary_nodes[line[0]].append({'x': x2, 'y': y2})
-
-        # Process sing_bodyCons_FE (BC1) data
-        for bc in bc_data:
-            if bc[0] not in primary_nodes:
-                primary_nodes[bc[0]] = []
-            primary_nodes[bc[0]].append({'x': bc[2], 'y': bc[3]})
-            primary_nodes[bc[0]].append({'x': bc[4], 'y': bc[5]})
-
-        # Process forces_table data
-        for force in forces_data:
-            if force[0] not in primary_nodes:
-                primary_nodes[force[0]] = []
-            primary_nodes[force[0]].append({'x': force[3], 'y': force[4]})
-
-        # Process dist_forces_table data
-        for dist_force in dist_forces_data:
-            if dist_force[0] not in primary_nodes:
-                primary_nodes[dist_force[0]] = []
-            primary_nodes[dist_force[0]].append({'x': dist_force[1], 'y': dist_force[2]})
-            primary_nodes[dist_force[0]].append({'x': dist_force[3], 'y': dist_force[4]})
-            add_secondary_nodes(dist_force[1], dist_force[2], dist_force[3], dist_force[4], primary_nodes[dist_force[0]], force_function=dist_force[5])
-
-        # Process body_forces_table data
-        for body_force in body_forces_data:
-            if body_force[0] not in primary_nodes:
-                primary_nodes[body_force[0]] = []
-            primary_nodes[body_force[0]].append({'x': body_force[1], 'y': body_force[2]})
-            primary_nodes[body_force[0]].append({'x': body_force[3], 'y': body_force[4]})
-            add_secondary_nodes(body_force[1], body_force[2], body_force[3], body_force[4], primary_nodes[body_force[0]], area_function=body_force[5])
-
-        # Process thermal_loads_table data
-        for thermal_load in thermal_loads_data:
-            if thermal_load[0] not in primary_nodes:
-                primary_nodes[thermal_load[0]] = []
-            primary_nodes[thermal_load[0]].append({'x': thermal_load[1], 'y': thermal_load[2]})
-            primary_nodes[thermal_load[0]].append({'x': thermal_load[3], 'y': thermal_load[4]})
-
-        # Remove duplicate nodes
-        for line_num in primary_nodes:
-            primary_nodes[line_num] = remove_duplicates(primary_nodes[line_num])
-
-        cursor.close()
-        conn.close()
-
-        return jsonify({'status': 'success', 'primary_nodes': primary_nodes})
-
-    except Exception as e:
-        print(f"Error processing mesh output: {e}")
-        return jsonify({'status': 'error', 'message': 'Failed to process mesh output.'}), 500
-
-# Function to calculate slope and identify the starting point
-def calculate_slope_and_identify_start(line):
-    line_num, x1, y1, x2, y2 = line
-    
-    # Explicitly check for vertical line
-    if x1 == x2:  # Vertical line
-        slope = float('inf')
-        y1_new = y1 + 0.01
-        y2_new = y2 + 0.01
-        
-        inside_start = (min(y1, y2) <= y1_new <= max(y1, y2))
-        inside_end = (min(y1, y2) <= y2_new <= max(y1, y2))
-
-        # Determine the first element starting point for vertical line
-        if inside_start and not inside_end:
-            print(f"First element for line {line_num} starts at original point: ({x1}, {y1})")
-            return (x1, y1, x2, y2)
-        elif inside_end and not inside_start:
-            print(f"First element for line {line_num} starts at original point: ({x2}, {y2})")
-            return (x1, y1, x2, y2)
-        else:
-            print(f"Both perturbed points outside the line bounds for line {line_num}. Starting from original points.")
-            return (x1, y1, x2, y2)  # Return original points if both perturbed points are outside
-
-    # For non-vertical lines, proceed as before
-    if x2 - x1 != 0:
-        slope = (y2 - y1) / (x2 - x1)
-    else:
-        slope = 0  # Handle potential floating-point anomalies
-
-    x1_new, y1_new, x2_new, y2_new = x1, y1, x2, y2
-    
-    if slope > 0:  # Positive slope
-        x1_new += 0.01
-        x2_new += 0.01
-        y1_new = y1 + 0.01 * slope
-        y2_new = y2 + 0.01 * slope
-    
-    elif slope < 0:  # Negative slope
-        x1_new -= 0.01
-        x2_new -= 0.01
-        y1_new = y1 + 0.01 * (-slope)
-        y2_new = y2 + 0.01 * (-slope)
-    
-    elif slope == 0:  # Horizontal line (slope is zero)
-        x1_new += 0.01
-        x2_new += 0.01
-    
-    # Check if the new points are inside the original line
-    inside_start = min(x1, x2) <= x1_new <= max(x1, x2) and min(y1, y2) <= y1_new <= max(y1, y2)
-    inside_end = min(x1, x2) <= x2_new <= max(x1, x2) and min(y1, y2) <= y2_new <= max(y1, y2)
-
-    # Determine the first element starting point
-    if inside_start and not inside_end:
-        print(f"First element for line {line_num} starts at original point: ({x1}, {y1})")
-        return (x1, y1, x2, y2)
-    elif inside_end and not inside_start:
-        print(f"First element for line {line_num} starts at original point: ({x2}, {y2})")
-        return (x1, y1, x2, y2)
-    else:
-        print(f"Both perturbed points outside the line bounds for line {line_num}. Starting from original points.")
-        return (x1, y1, x2, y2)  # Return original points if both perturbed points are outside
-
-@app.route('/output')
-def output():
-    # Example of fetching processed data, in reality, you might store this data after processing
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-
-        cursor.execute("SELECT * FROM your_processed_data_table WHERE session_id=%s", (session_id,))
-        sorted_data = cursor.fetchall()
-
-        cursor.close()
-        conn.close()
-
-        # Render the template and pass the sorted_data
-        return render_template('mesh_output.html', sorted_data=sorted_data)
-
-    except Exception as e:
-        print(f"Error displaying mesh output: {e}")
-        return "Error displaying mesh output.", 500
 
 
 
