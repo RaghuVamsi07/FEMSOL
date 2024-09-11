@@ -883,6 +883,104 @@ def delete_bc1(bc_id):
 
 
 
+
+# Round coordinates to 3 decimal places to remove duplicates
+def round_coords(x, y):
+    return round(x, 3), round(y, 3)
+
+# Utility function for removing duplicates
+def remove_duplicates(nodes):
+    unique_nodes = []
+    seen = set()
+
+    for node in nodes:
+        coord = round_coords(node['x'], node['y'])
+        if coord not in seen:
+            unique_nodes.append(node)
+            seen.add(coord)
+
+    return unique_nodes
+
+# Function to calculate the length (axial coordinate)
+def calculate_axial_length(x1, y1, x2, y2):
+    return sqrt(x1**2 + y1**2), sqrt(x2**2 + y2**2)
+
+# Function to integrate the thermal load
+def integrate_thermal_load(E, area_function, alpha, temperature, x1, y1, x2, y2, body_force_coords):
+    l1, l2 = calculate_axial_length(x1, y1, x2, y2)
+    x = symbols('x')
+    area_func = lambdify(x, sympify(area_function), 'numpy')
+
+    for coords in body_force_coords:
+        if coords['area_function'] == area_function:
+            thermal_integral = integrate(
+                E * alpha * temperature * area_func(x),
+                (x, l1, l2)
+            )
+            return thermal_integral
+    return 0
+
+# Function to integrate distributive force function over a segment
+def integrate_distributive_force_function(force_dist, l1, l2):
+    x = symbols('x')
+    force_func = lambdify(x, sympify(force_dist), 'numpy')
+    force_integral = integrate(force_func(x), (x, l1, l2))
+    return force_integral
+
+# Function to integrate body force over a segment
+def integrate_body_force(dens_val, gravity, x1, y1, x2, y2, area_function):
+    l1, l2 = calculate_axial_length(x1, y1, x2, y2)
+    x = symbols('x')
+    area_func = lambdify(x, sympify(area_function), 'numpy')
+
+    if x1 == 0 and x2 == 0 and y1 == 0 and y2 == 0:
+        cos_theta = 0
+    else:
+        cos_theta = Abs((y2 - y1) / sqrt((x2 - x1)**2 + (y1 - y2)**2))
+
+    body_force_integral = integrate(
+        dens_val * gravity * cos_theta * area_func(x),
+        (x, l1, l2)
+    )
+    return body_force_integral
+
+# Function to add secondary nodes based on force distribution, area variation, and thermal load
+def add_secondary_nodes(x1, y1, x2, y2, primary_nodes, force_function=None, area_function=None, dens_val=None, gravity=9.81, E=None, alpha=None, temperature=None, body_force_coords=None):
+    l1, l2 = calculate_axial_length(x1, y1, x2, y2)
+
+    total_distributive_force = integrate_distributive_force_function(force_function, l1, l2) if force_function else 0
+    total_body_force = integrate_body_force(dens_val, gravity, x1, y1, x2, y2, area_function) if dens_val and area_function else 0
+    total_thermal_load = integrate_thermal_load(E, area_function, alpha, temperature, x1, y1, x2, y2, body_force_coords) if E and alpha and temperature and area_function else 0
+    total_effect = total_distributive_force + total_body_force + total_thermal_load
+
+    if total_body_force == 0 and area_function is not None:
+        if {'x': round_coords(x1, y1)[0], 'y': round_coords(x1, y1)[1]} not in primary_nodes:
+            primary_nodes.insert(0, {'x': round_coords(x1, y1)[0], 'y': round_coords(x1, y1)[1]})
+        if {'x': round_coords(x2, y2)[0], 'y': round_coords(x2, y2)[1]} not in primary_nodes:
+            primary_nodes.append({'x': round_coords(x2, y2)[0], 'y': round_coords(x2, y2)[1]})
+        return
+
+    if total_effect == 0:
+        return
+
+    num_subdivisions = max(2, int(total_effect ** 0.5))
+
+    if num_subdivisions > 1:
+        dx = (x2 - x1) / num_subdivisions
+        dy = (y2 - y1) / num_subdivisions
+
+        for i in range(1, num_subdivisions):
+            new_x = x1 + i * dx
+            new_y = y1 + i * dy
+            primary_nodes.append({'x': round_coords(new_x, new_y)[0], 'y': round_coords(new_x, new_y)[1]})
+
+    if {'x': round_coords(x1, y1)[0], 'y': round_coords(x1, y1)[1]} not in primary_nodes:
+        primary_nodes.insert(0, {'x': round_coords(x1, y1)[0], 'y': round_coords(x1, y1)[1]})
+    if {'x': round_coords(x2, y2)[0], 'y': round_coords(x2, y2)[1]} not in primary_nodes:
+        primary_nodes.append({'x': round_coords(x2, y2)[0], 'y': round_coords(x2, y2)[1]})
+
+
+
 @app.route('/generate-mesh', methods=['POST'])
 def generate_mesh():
     data = request.json
@@ -916,159 +1014,6 @@ def generate_mesh():
         cursor.execute("SELECT line_num, xt1, yt1, xt2, yt2, alpha, T FROM thermal_loads_table WHERE session_id=%s", (session_id,))
         thermal_loads_data = cursor.fetchall()
 
-
-        def round_coords(x, y):
-            return round(x, 3), round(y, 3)
-        
-        # Utility function for removing duplicates
-        def remove_duplicates(nodes):
-            unique_nodes = []
-            seen = set()
-        
-            for node in nodes:
-                coord = round_coords(node['x'], node['y'])
-                if coord not in seen:
-                    unique_nodes.append(node)
-                    seen.add(coord)
-        
-            return unique_nodes
-        
-        # Function to calculate the length (axial coordinate)
-        def calculate_axial_length(x1, y1, x2, y2):
-            return sqrt(x1**2 + y1**2), sqrt(x2**2 + y2**2)
-        
-        # Function to integrate the thermal load
-        def integrate_thermal_load(E, area_function, alpha, temperature, x1, y1, x2, y2, body_force_coords):
-            l1, l2 = calculate_axial_length(x1, y1, x2, y2)
-            x = symbols('x')
-            area_func = lambdify(x, sympify(area_function), 'numpy')
-        
-            # Check if both nodes have the same area function in body force coordinates
-            for coords in body_force_coords:
-                if coords['area_function'] == area_function:
-                    thermal_integral = integrate(
-                        E * alpha * temperature * area_func(x),
-                        (x, l1, l2)
-                    )
-                    return thermal_integral
-            return 0  # No matching area function, return zero influence
-        
-        # Function to integrate distributive force function over a segment
-        def integrate_distributive_force_function(force_dist, l1, l2):
-            x = symbols('x')
-            force_func = lambdify(x, sympify(force_dist), 'numpy')
-            force_integral = integrate(force_func(x), (x, l1, l2))
-            return force_integral
-        
-        # Function to integrate body force over a segment
-        def integrate_body_force(dens_val, gravity, x1, y1, x2, y2, area_function):
-            l1, l2 = calculate_axial_length(x1, y1, x2, y2)
-            x = symbols('x')
-            area_func = lambdify(x, sympify(area_function), 'numpy')
-            
-            if x1 == 0 and x2 == 0 and y1 == 0 and y2 == 0:
-                cos_theta = 0
-            else:
-                cos_theta = Abs((y2 - y1) / sqrt((x2 - x1)**2 + (y1 - y2)**2))
-        
-            body_force_integral = integrate(
-                dens_val * gravity * cos_theta * area_func(x),
-                (x, l1, l2)
-            )
-            return body_force_integral
-        
-        # Function to add secondary nodes based on force distribution, area variation, and thermal load
-        def add_secondary_nodes(x1, y1, x2, y2, primary_nodes, force_function=None, area_function=None, dens_val=None, gravity=9.81, E=None, alpha=None, temperature=None, body_force_coords=None):
-            l1, l2 = calculate_axial_length(x1, y1, x2, y2)
-        
-            total_distributive_force = integrate_distributive_force_function(force_function, l1, l2) if force_function else 0
-            total_body_force = integrate_body_force(dens_val, gravity, x1, y1, x2, y2, area_function) if dens_val and area_function else 0
-            total_thermal_load = integrate_thermal_load(E, area_function, alpha, temperature, x1, y1, x2, y2, body_force_coords) if E and alpha and temperature and area_function else 0
-            total_effect = total_distributive_force + total_body_force + total_thermal_load
-        
-            if total_body_force == 0 and area_function is not None:
-                if {'x': round_coords(x1, y1)[0], 'y': round_coords(x1, y1)[1]} not in primary_nodes:
-                    primary_nodes.insert(0, {'x': round_coords(x1, y1)[0], 'y': round_coords(x1, y1)[1]})
-                if {'x': round_coords(x2, y2)[0], 'y': round_coords(x2, y2)[1]} not in primary_nodes:
-                    primary_nodes.append({'x': round_coords(x2, y2)[0], 'y': round_coords(x2, y2)[1]})
-                return
-        
-            if total_effect == 0:
-                return
-        
-            num_subdivisions = max(2, int(total_effect ** 0.5))
-        
-            if num_subdivisions > 1:
-                dx = (x2 - x1) / num_subdivisions
-                dy = (y2 - y1) / num_subdivisions
-        
-                for i in range(1, num_subdivisions):
-                    new_x = x1 + i * dx
-                    new_y = y1 + i * dy
-                    primary_nodes.append({'x': round_coords(new_x, new_y)[0], 'y': round_coords(new_x, new_y)[1]})
-        
-            if {'x': round_coords(x1, y1)[0], 'y': round_coords(x1, y1)[1]} not in primary_nodes:
-                primary_nodes.insert(0, {'x': round_coords(x1, y1)[0], 'y': round_coords(x1, y1)[1]})
-            if {'x': round_coords(x2, y2)[0], 'y': round_coords(x2, y2)[1]} not in primary_nodes:
-                primary_nodes.append({'x': round_coords(x2, y2)[0], 'y': round_coords(x2, y2)[1]})
-        
-        def calculate_distance(x_start, y_start, x, y):
-            return sqrt((x - x_start) ** 2 + (y - y_start) ** 2)
-        
-        # Function to sort nodes based on the distance from the starting point
-        def sort_nodes_by_distance(start_point, nodes):
-            x_start, y_start = start_point
-            return sorted(nodes, key=lambda node: calculate_distance(x_start, y_start, node['x'], node['y']))
-        
-        # Function to calculate slope and identify the starting point
-        def calculate_slope_and_identify_start(line):
-            line_num, x1, y1, x2, y2 = line
-        
-            # Explicitly check for vertical line
-            if x1 == x2:  # Vertical line
-                slope = float('inf')
-                y1_new = y1 + 0.01
-                y2_new = y2 + 0.01
-        
-                inside_start = (min(y1, y2) <= y1_new <= max(y1, y2))
-                inside_end = (min(y1, y2) <= y2_new <= max(y1, y2))
-        
-                # Determine the first element starting point for vertical line
-                if inside_start and not inside_end:
-                    return (x1, y1)
-                elif inside_end and not inside_start:
-                    return (x2, y2)
-                else:
-                    return (x1, y1)  # Return original points if both perturbed points are outside
-        
-            # For non-vertical lines, proceed as before
-            slope = (y2 - y1) / (x2 - x1) if x2 - x1 != 0 else 0
-        
-            if slope > 0:  # Positive slope
-                x1_new, y1_new = x1 + 0.01, y1 + 0.01 * slope
-                x2_new, y2_new = x2 + 0.01, y2 + 0.01 * slope
-        
-            elif slope < 0:  # Negative slope
-                x1_new, y1_new = x1 - 0.01, y1 + 0.01 * (-slope)
-                x2_new, y2_new = x2 - 0.01, y2 + 0.01 * (-slope)
-        
-            else:  # Horizontal line (slope is zero)
-                x1_new, x2_new = x1 + 0.01, x2 + 0.01
-                y1_new, y2_new = y1, y2
-        
-            inside_start = min(x1, x2) <= x1_new <= max(x1, x2) and min(y1, y2) <= y1_new <= max(y1, y2)
-            inside_end = min(x1, x2) <= x2_new <= max(x1, x2) and min(y1, y2) <= y2_new <= max(y1, y2)
-        
-            if inside_start and not inside_end:
-                return (x1, y1)
-            elif inside_end and not inside_start:
-                return (x2, y2)
-            else:
-                return (x1, y1)  # Return original points if both perturbed points are outside
-        def is_within_limits(x, y, x_start, y_start, x_end, y_end):
-            return (min(x_start, x_end) <= x <= max(x_start, x_end)) and (min(y_start, y_end) <= y <= max(y_start, y_end))
-        
-        
         # Combine the data and remove duplicates (server-side processing)
         primary_nodes = {}
         
@@ -1116,23 +1061,18 @@ def generate_mesh():
                 primary_nodes[thermal_load[0]] = []
             primary_nodes[thermal_load[0]].append({'x': thermal_load[1], 'y': thermal_load[2]})
             primary_nodes[thermal_load[0]].append({'x': thermal_load[3], 'y': thermal_load[4]})
-            add_secondary_nodes(thermal_load[1], thermal_load[2], thermal_load[3], thermal_load[4], primary_nodes[thermal_load[0]])
+            add_secondary_nodes(thermal_load[1], thermal_load[2], thermal_load[3], thermal_load[4], primary_nodes[thermal_load[0]], alpha=thermal_load[5], temperature=thermal_load[6], E=body_force[5])
 
 
       
-
-# Function to remove duplicates and filter nodes within the line's co-limits
+        # Remove duplicate nodes
         for line_num in primary_nodes:
             primary_nodes[line_num] = remove_duplicates(primary_nodes[line_num])
 
-            line_start = next(line for line in lines_data if line[0] == line_num)
-            x_start, y_start = line_start[1], line_start[2]
-            x_end, y_end = line_start[3], line_start[4]
+        cursor.close()
+        conn.close()
 
-            primary_nodes[line_num] = [
-                node for node in primary_nodes[line_num] 
-                if is_within_limits(node['x'], node['y'], x_start, y_start, x_end, y_end)
-                ]
+        return jsonify({'status': 'success', 'primary_nodes': primary_nodes})
 
     except Exception as e:
         print(f"Error generating mesh: {e}")
